@@ -1,0 +1,17 @@
+#template-pw00-web:
+#    name: template-pw00-web
+#    desired-capacity: 2
+#    minsize: 2
+#    maxsize: 4
+#    cooldown: 10
+#    launch-configuration: template-pw00-web
+#    subnets:
+#        - template-p-a-priv-01
+#        - template-p-b-priv-01
+#    az:
+#        - a
+#        - b
+#    healthchecktype: 'EC2'
+#    loadbalancers: 
+#        - template-p-web-pub
+#

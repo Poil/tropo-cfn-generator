@@ -1,0 +1,33 @@
+{
+    "AWS::CloudFormation::Init": {
+        "config": {
+            "files": {
+                "/etc/cfn/cfn-hup.conf": {
+                    "content" : { "Fn::Join" : ["", [
+                      "[main]\n",
+                      "stack=", { "Ref": "AWS::StackName" }, "\n",
+                      "region=",{ "Ref": "AWS::Region" }, "\n\n"
+                    ]]}
+                },
+                "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                    "content": { "Fn::Join" : ["", [
+                      "[cfn-auto-reloader-hook]\n",
+                      "triggers=post.update\n",
+                      "path=Resources.%s.Metadata.AWS::CloudFormation::Init\n" % name,
+                      "action=cfn-init -v -s ", {"Ref": "AWS::StackName" }, " -r %s" % name, " --region ", {"Ref": "AWS::Region" }, "\n\n"
+                    ]]}
+                },
+                "/etc/nat-monitor.cfg": {
+                    "content": { "Fn::Join": ["", [
+                        "VPC_NAME=", { "Ref": "VpcName" }, "\n",
+                        "AWS_DEFAULT_REGION=", { "Ref": "AWS::Region" }, "\n",
+                        "NAT_MONITOR_FROM_EMAIL=", { "Ref": "me@mycompany.com" }, "\n",
+                        "NAT_MONITOR_TO_EMAIL=", { "Ref": "me@mycompany.com" }, "\n",
+                        "NAT_NAME_AZ_A=", { "Ref": "NatNameAzA" }, "\n",
+                        "NAT_NAME_AZ_B=", { "Ref": "NatNameAzB" }, "\n"
+                    ]]}
+                }
+            }
+        }
+    }
+}

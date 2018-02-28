@@ -1,0 +1,25 @@
+ocptls-p-a-priv:
+  propagation: true
+  dependsOn: ocptls-pi01-nat
+  routes:
+  - to: 0.0.0.0/0
+    via: ocptls-pi01-nat
+  - to: 10.160.4.0/23    # Customer 1
+    via: pcx-dde979ba3
+  - to: 10.160.6.0/23    # Customer 2
+    via: pcx-6d887b05
+ocptls-p-b-priv:
+  propagation: true
+  dependsOn: ocptls-pi02-nat
+  routes:
+  - to: 0.0.0.0/0
+    via: ocptls-pi02-nat
+  - to: 10.160.4.0/23    # Customer 1
+    via: pcx-dde979ba3
+  - to: 10.160.6.0/23    # Customer 2
+    via: pcx-6d887b05
+ocptls-p-pub:
+  propagation: true
+  routes:
+  - to: 0.0.0.0/0
+    via: internet-gateway

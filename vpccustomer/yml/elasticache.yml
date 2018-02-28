@@ -1,0 +1,11 @@
+customer-ec-01:
+  nodeType: cache.m3.large
+  engine: memcached
+  nodes: 2
+  port: 11211
+  security-groups:
+    - sgMemcached
+  subnets:
+    - customer-p-a-priv-01
+    - customer-p-b-priv-01
+

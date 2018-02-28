@@ -1,0 +1,49 @@
+customer-pw00-web-r8:
+  name: customer-pw00-web-r8
+  ami: Ubuntu1404-20150421
+  instanceType: m4.large
+  ebsSize: 50
+  enabled: y
+  security-groups:
+    - sgMAH
+    - sgPWebServer
+  role: Webserver
+  user-metadata : aslc-common.json.tpl
+  cloudformation-init: instances-common.dict
+  policies:
+    s3-ro-customer-p-codedeploy:
+      bucket: customer-p-codedeploy
+      type: s3
+      access: ro
+    s3-rw-customer-p-static:
+      bucket: customer-p-static
+      type: s3
+      access: rw
+    s3-rw-customer-p-myapp:
+      bucket: customer-p-myapp
+      type: s3
+      access: rw
+    s3-ro-customer-p-satis:
+      bucket: customer-p-satis
+      type: s3
+      access: ro
+    code-deploy-ro:
+      type: codedeploy
+      access: ro
+    sqs-p-rw:
+      type: sqs
+      access: rw
+      queue: '*' 
+    cloudsearch-p-search:
+      type: cloudsearch
+      access: search
+      domain: customer-p-myapp
+    cloudwatch-rw:
+      type: cloudwatch
+      access: rw
+  facts:
+    subrole: web
+    role: webserver
+    platform: production
+    status: production
+

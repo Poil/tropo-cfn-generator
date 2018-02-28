@@ -1,0 +1,166 @@
+sgLaxist:
+    desc: Open Bar
+    in:
+        - tcp:any:10.0.0.0/8
+        - udp:any:10.0.0.0/8
+        - icmp:10.0.0.0/8
+    out:
+        - tcp:any:0.0.0.0/0
+        - udp:any:0.0.0.0/0
+        - icmp:0.0.0.0/0
+
+sgNatInstance:
+    desc: NAT Instance
+    in:
+        - tcp:http,https,ntp:0.0.0.0/0
+        - tcp:ssh:10.71.0.0/22
+        - tcp:3306-3309:sgRdsDB,sgBastion
+    out:
+        - tcp:any:0.0.0.0/0
+        - udp:any:0.0.0.0/0
+        - icmp:0.0.0.0/0
+
+sgMAH:
+    desc: security group pour les serveurs managed
+    in:
+        - tcp:ssh:10.71.0.0/22,sgBastion
+        - udp:161:10.71.0.0/22,sgBastion        # SNMP
+        - tcp:10050:10.71.0.0/22,sgBastion      # Zabbix agentd
+        - icmp:10.71.0.0/22,sgBastion
+    out:
+        - udp:ntp:0.0.0.0/0         # NTP
+        - tcp:dns:0.0.0.0/0         # DNS
+        - udp:dns:0.0.0.0/0         # DNS
+        - tcp:puppet:10.71.0.0/22   # Puppet
+        - tcp:61614:10.71.0.0/22    # MCO
+        - udp:25826:10.71.0.0/22    # Collectd
+        - tcp:http,https:0.0.0.0/0
+        - tcp:10051:10.71.0.0/22                # Zabbix agentd
+
+sgDnsServer:
+    desc: Dns Server
+    in:
+        - tcp:dns:10.0.0.0/8
+        - udp:dns:10.0.0.0/8
+        - tcp:ssh:10.71.0.0/22
+        - icmp:10.0.0.0/8
+    out:
+        - tcp:any:0.0.0.0/0
+        - udp:any:0.0.0.0/0
+        - icmp:0.0.0.0/0
+
+sgBastion:
+    desc: Bastion
+    in:
+        - tcp:ssh:10.71.0.0/22,84.14.42.112/29,62.23.113.242/32,95.131.143.162/32,95.131.143.161/32,62.97.101.250/32
+        - icmp:10.71.0.0/22
+    out:
+        - tcp:ssh:10.160.14.0/23,131.103.20.168,131.103.20.167 # Allow bitbucket.org
+        - tcp:3306:sgRdsDB
+        - tcp:3306-3309:sgNatInstance
+        - icmp:0.0.0.0/0
+        - tcp:27017-27019:sgMongoDB
+
+sgPElbWebPub:
+    desc: ELB Pub Production
+    in:
+        - tcp:http:0.0.0.0/0
+        - tcp:https:0.0.0.0/0
+    out:
+        - tcp:http:sgPWebServer
+
+sgEWebServer:
+    desc: Web Server Preproduction
+    in:
+        - tcp:http:0.0.0.0/0
+        - tcp:ssh:sgBastion
+    out:
+        - tcp:3306:sgRdsDB
+        - tcp:11211:sgMemcached
+        - tcp:ssh:10.160.14.0/23,131.103.20.168,131.103.20.167 # Allow bitbucket.org
+        - tcp:27017-27019:sgMongoDB
+        - tcp:any:0.0.0.0/0
+        - udp:any:0.0.0.0/0
+        - icmp:0.0.0.0/0
+
+sgPWebServer:
+    desc: Web Server Production
+    in:
+        - tcp:http:sgPElbWebPub
+    out:
+        - tcp:3306:sgRdsDB
+        - tcp:11211:sgMemcached
+        - tcp:27017-27019:sgMongoDB
+        - tcp:any:0.0.0.0/0
+        - udp:any:0.0.0.0/0
+        - icmp:0.0.0.0/0
+
+sgRdsDB:
+    desc: RDS PROD & PREPROD
+    in:
+        - tcp:3306:sgPWebServer,sgEWebServer,sgBastion,sgPBatch,sgPTools,sgPStats,sgFTP,95.131.143.162,95.131.143.161,95.131.143.163,62.240.254.57/32
+    out:
+        - tcp:3306-3320:0.0.0.0/0
+
+sgMemcached:
+    desc: security group pour les memcached
+    in:
+        - tcp:11211:sgPWebServer,sgEWebServer,sgPBatch
+
+sgPBatch:
+    desc: Batch Production
+    in:
+        - tcp:any:10.0.0.0/8
+        - udp:any:10.0.0.0/8
+        - icmp:10.0.0.0/8
+    out:
+        - tcp:3306:sgRdsDB
+        - tcp:any:0.0.0.0/0
+        - udp:any:0.0.0.0/0
+        - icmp:0.0.0.0/0
+
+sgPTools:
+    desc: Tools Production
+    in:
+        - tcp:any:10.0.0.0/8
+        - udp:any:10.0.0.0/8
+        - icmp:10.0.0.0/8
+    out:
+        - tcp:3306:sgRdsDB
+        - tcp:any:0.0.0.0/0
+        - udp:any:0.0.0.0/0
+        - icmp:0.0.0.0/0
+
+sgPStats:
+    desc: Stats Production
+    in:
+        - tcp:any:10.0.0.0/8
+        - udp:any:10.0.0.0/8
+        - icmp:10.0.0.0/8
+    out:
+        - tcp:3306:sgRdsDB
+        - tcp:any:0.0.0.0/0
+        - udp:any:0.0.0.0/0
+        - icmp:0.0.0.0/0
+
+sgFTP:
+    desc: FTPd
+    in:
+        - tcp:20,21:0.0.0.0/0
+        - tcp:50000-50100:0.0.0.0/0
+    out:
+        - tcp:any:0.0.0.0/0
+        - udp:any:0.0.0.0/0
+        - icmp:0.0.0.0/0
+
+sgPWebADM:
+    desc: ADM
+    out:
+        - tcp:ssh,9418:0.0.0.0/0
+
+sgMongoDB:
+    desc: MongoDB PROD
+    in:
+        - tcp:27017-27019:10.71.0.0/22,sgPWebServer,sgEWebServer,sgPBatch,sgPTools,sgPStats,sgMongoDB,sgBastion
+    out:
+        - tcp:27017-27019:sgMongoDB

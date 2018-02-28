@@ -1,0 +1,1048 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Outputs": {
+        "sgAdminId": {
+            "Value": {
+                "Ref": "sgAdmin"
+            }
+        },
+        "sgBastionId": {
+            "Value": {
+                "Ref": "sgBastion"
+            }
+        },
+        "sgDnsServerId": {
+            "Value": {
+                "Ref": "sgDnsServer"
+            }
+        },
+        "sgLaxistId": {
+            "Value": {
+                "Ref": "sgLaxist"
+            }
+        },
+        "sgMAHId": {
+            "Value": {
+                "Ref": "sgMAH"
+            }
+        },
+        "sgNatInstanceId": {
+            "Value": {
+                "Ref": "sgNatInstance"
+            }
+        },
+        "sgPuppetServerId": {
+            "Value": {
+                "Ref": "sgPuppetServer"
+            }
+        },
+        "sgSvcProxyId": {
+            "Value": {
+                "Ref": "sgSvcProxy"
+            }
+        },
+        "sgZbxProxyId": {
+            "Value": {
+                "Ref": "sgZbxProxy"
+            }
+        }
+    },
+    "Parameters": {
+        "TheVPC": {
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "sgAdmin": {
+            "Properties": {
+                "GroupDescription": "Services Proxy",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 161,
+                        "IpProtocol": "udp",
+                        "ToPort": 161
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 10050,
+                        "IpProtocol": "tcp",
+                        "ToPort": 10050
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgAdmin"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgAdminRuleInTcpFrom22To22DestsgBastion": {
+            "Properties": {
+                "FromPort": 22,
+                "GroupId": {
+                    "Ref": "sgAdmin"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgBastion"
+                },
+                "ToPort": 22
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgBastion": {
+            "Properties": {
+                "GroupDescription": "Bastion",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 80,
+                        "IpProtocol": "tcp",
+                        "ToPort": 80
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 443,
+                        "IpProtocol": "tcp",
+                        "ToPort": 443
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 123,
+                        "IpProtocol": "tcp",
+                        "ToPort": 123
+                    },
+                    {
+                        "CidrIp": "10.71.0.0/22",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.0.8.0/24",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "10.0.12.32/27",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "10.7.79.4/32",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "10.0.30.0/23",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "10.129.60.161/32",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "10.0.8.0/24",
+                        "FromPort": 1080,
+                        "IpProtocol": "tcp",
+                        "ToPort": 1080
+                    },
+                    {
+                        "CidrIp": "10.0.12.0/24",
+                        "FromPort": 1080,
+                        "IpProtocol": "tcp",
+                        "ToPort": 1080
+                    },
+                    {
+                        "CidrIp": "10.7.79.0/24",
+                        "FromPort": 1080,
+                        "IpProtocol": "tcp",
+                        "ToPort": 1080
+                    },
+                    {
+                        "CidrIp": "10.7.101.4/32",
+                        "FromPort": 1080,
+                        "IpProtocol": "tcp",
+                        "ToPort": 1080
+                    },
+                    {
+                        "CidrIp": "10.129.62.140/32",
+                        "FromPort": 1080,
+                        "IpProtocol": "tcp",
+                        "ToPort": 1080
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 161,
+                        "IpProtocol": "udp",
+                        "ToPort": 161
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 10050,
+                        "IpProtocol": "tcp",
+                        "ToPort": 10050
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgBastion"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgDnsServer": {
+            "Properties": {
+                "GroupDescription": "Dns Server",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 53,
+                        "IpProtocol": "tcp",
+                        "ToPort": 53
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 53,
+                        "IpProtocol": "udp",
+                        "ToPort": 53
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 161,
+                        "IpProtocol": "udp",
+                        "ToPort": 161
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 10050,
+                        "IpProtocol": "tcp",
+                        "ToPort": 10050
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgDnsServer"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgDnsServerRuleInTcpFrom22To22DestsgBastion": {
+            "Properties": {
+                "FromPort": 22,
+                "GroupId": {
+                    "Ref": "sgDnsServer"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgBastion"
+                },
+                "ToPort": 22
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgLaxist": {
+            "Properties": {
+                "GroupDescription": "Open Bar",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgLaxist"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgMAH": {
+            "Properties": {
+                "GroupDescription": "security group pour les serveurs managed",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 123,
+                        "IpProtocol": "udp",
+                        "ToPort": 123
+                    },
+                    {
+                        "CidrIp": "10.7.0.9/32",
+                        "FromPort": 53,
+                        "IpProtocol": "tcp",
+                        "ToPort": 53
+                    },
+                    {
+                        "CidrIp": "10.7.0.13/32",
+                        "FromPort": 53,
+                        "IpProtocol": "tcp",
+                        "ToPort": 53
+                    },
+                    {
+                        "CidrIp": "10.2.3.10/32",
+                        "FromPort": 53,
+                        "IpProtocol": "tcp",
+                        "ToPort": 53
+                    },
+                    {
+                        "CidrIp": "10.2.3.7/32",
+                        "FromPort": 53,
+                        "IpProtocol": "tcp",
+                        "ToPort": 53
+                    },
+                    {
+                        "CidrIp": "10.7.0.9/32",
+                        "FromPort": 53,
+                        "IpProtocol": "udp",
+                        "ToPort": 53
+                    },
+                    {
+                        "CidrIp": "10.7.0.13/32",
+                        "FromPort": 53,
+                        "IpProtocol": "udp",
+                        "ToPort": 53
+                    },
+                    {
+                        "CidrIp": "10.2.3.10/32",
+                        "FromPort": 53,
+                        "IpProtocol": "udp",
+                        "ToPort": 53
+                    },
+                    {
+                        "CidrIp": "10.2.3.7/32",
+                        "FromPort": 53,
+                        "IpProtocol": "udp",
+                        "ToPort": 53
+                    },
+                    {
+                        "CidrIp": "10.7.79.15/32",
+                        "FromPort": 8140,
+                        "IpProtocol": "tcp",
+                        "ToPort": 8140
+                    },
+                    {
+                        "CidrIp": "10.129.60.141/32",
+                        "FromPort": 8140,
+                        "IpProtocol": "tcp",
+                        "ToPort": 8140
+                    },
+                    {
+                        "CidrIp": "10.129.60.142/32",
+                        "FromPort": 8140,
+                        "IpProtocol": "tcp",
+                        "ToPort": 8140
+                    },
+                    {
+                        "CidrIp": "10.129.60.143/32",
+                        "FromPort": 8140,
+                        "IpProtocol": "tcp",
+                        "ToPort": 8140
+                    },
+                    {
+                        "CidrIp": "10.7.79.15/32",
+                        "FromPort": 61614,
+                        "IpProtocol": "tcp",
+                        "ToPort": 61614
+                    },
+                    {
+                        "CidrIp": "10.129.60.141/32",
+                        "FromPort": 61614,
+                        "IpProtocol": "tcp",
+                        "ToPort": 61614
+                    },
+                    {
+                        "CidrIp": "10.129.60.142/32",
+                        "FromPort": 61614,
+                        "IpProtocol": "tcp",
+                        "ToPort": 61614
+                    },
+                    {
+                        "CidrIp": "10.129.60.143/32",
+                        "FromPort": 61614,
+                        "IpProtocol": "tcp",
+                        "ToPort": 61614
+                    },
+                    {
+                        "CidrIp": "10.7.79.71/32",
+                        "FromPort": 25826,
+                        "IpProtocol": "udp",
+                        "ToPort": 25826
+                    },
+                    {
+                        "CidrIp": "10.7.79.72/32",
+                        "FromPort": 25826,
+                        "IpProtocol": "udp",
+                        "ToPort": 25826
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 80,
+                        "IpProtocol": "tcp",
+                        "ToPort": 80
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 443,
+                        "IpProtocol": "tcp",
+                        "ToPort": 443
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 161,
+                        "IpProtocol": "udp",
+                        "ToPort": 161
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 10050,
+                        "IpProtocol": "tcp",
+                        "ToPort": 10050
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgMAH"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgMAHRuleInTcpFrom22To22DestsgBastion": {
+            "Properties": {
+                "FromPort": 22,
+                "GroupId": {
+                    "Ref": "sgMAH"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgBastion"
+                },
+                "ToPort": 22
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgNatInstance": {
+            "Properties": {
+                "GroupDescription": "NAT Instance",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 80,
+                        "IpProtocol": "tcp",
+                        "ToPort": 80
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 443,
+                        "IpProtocol": "tcp",
+                        "ToPort": 443
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 123,
+                        "IpProtocol": "tcp",
+                        "ToPort": 123
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 161,
+                        "IpProtocol": "udp",
+                        "ToPort": 161
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 10050,
+                        "IpProtocol": "tcp",
+                        "ToPort": 10050
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgNatInstance"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgNatInstanceRuleInTcpFrom22To22DestsgBastion": {
+            "Properties": {
+                "FromPort": 22,
+                "GroupId": {
+                    "Ref": "sgNatInstance"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgBastion"
+                },
+                "ToPort": 22
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgPuppetServer": {
+            "Properties": {
+                "GroupDescription": "Puppet Server",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 8140,
+                        "IpProtocol": "tcp",
+                        "ToPort": 8140
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 80,
+                        "IpProtocol": "tcp",
+                        "ToPort": 80
+                    },
+                    {
+                        "CidrIp": "10.129.60.71/32",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "10.129.60.64/26",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "10.129.60.128/26",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 161,
+                        "IpProtocol": "udp",
+                        "ToPort": 161
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 10050,
+                        "IpProtocol": "tcp",
+                        "ToPort": 10050
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgPuppetServer"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgPuppetServerRuleInTcpFrom0To65535DestsgPuppetServer": {
+            "Properties": {
+                "FromPort": 0,
+                "GroupId": {
+                    "Ref": "sgPuppetServer"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgPuppetServer"
+                },
+                "ToPort": 65535
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgPuppetServerRuleInUdpFrom0To65535DestsgPuppetServer": {
+            "Properties": {
+                "FromPort": 0,
+                "GroupId": {
+                    "Ref": "sgPuppetServer"
+                },
+                "IpProtocol": "udp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgPuppetServer"
+                },
+                "ToPort": 65535
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgSvcProxy": {
+            "Properties": {
+                "GroupDescription": "Services Proxy",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 10050,
+                        "IpProtocol": "tcp",
+                        "ToPort": 10050
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 10051,
+                        "IpProtocol": "tcp",
+                        "ToPort": 10051
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 8181,
+                        "IpProtocol": "tcp",
+                        "ToPort": 8181
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 161,
+                        "IpProtocol": "udp",
+                        "ToPort": 161
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 25826,
+                        "IpProtocol": "udp",
+                        "ToPort": 25826
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgSvcProxy"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgSvcProxyRuleInTcpFrom22To22DestsgBastion": {
+            "Properties": {
+                "FromPort": 22,
+                "GroupId": {
+                    "Ref": "sgSvcProxy"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgBastion"
+                },
+                "ToPort": 22
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgZbxProxy": {
+            "Properties": {
+                "GroupDescription": "Zabbix Proxies",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 10050,
+                        "IpProtocol": "tcp",
+                        "ToPort": 10050
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 10051,
+                        "IpProtocol": "tcp",
+                        "ToPort": 10051
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 161,
+                        "IpProtocol": "udp",
+                        "ToPort": 161
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgZbxProxy"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgZbxProxyRuleInTcpFrom22To22DestsgBastion": {
+            "Properties": {
+                "FromPort": 22,
+                "GroupId": {
+                    "Ref": "sgZbxProxy"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgBastion"
+                },
+                "ToPort": 22
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        }
+    }
+}

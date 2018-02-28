@@ -1,0 +1,45 @@
+account_id: '616491408109'
+s3bucket: template
+keypair: template
+
+region: eu-west-1
+defaultAZ: a
+
+facts:
+    location: aws
+    client_code: template_group
+    client_name: template_group # retro compat
+    project_code: template
+    platform: production
+    hosting_code: mah
+    node_name_fact: fqdn
+    node_name: facter
+    certname: generic-hostcert.aws
+    puppetmaster_srv: puppet.tools.eu-west-1.ourcompany.com
+    puppetmaster_ca: puppet.tools.eu-west-1.ourcompany.com
+    srv_domain: tools.eu-west-1.ourcompany.com
+
+amis:
+    CentOS7-20150729: 
+        id: ami-944612e3
+        bootdevice: /dev/sda1
+    Debian7-20150729: 
+        id: ami-8a4713fd
+        bootdevice: /dev/xvda
+    Ubuntu1404-20150729:
+        id: ami-5840142f
+        bootdevice: /dev/sda1
+
+vpc: !include vpc.yml
+route53: !include route53.yml
+subnets: !include subnets.yml
+route-tables: !include route-tables.yml
+security-groups: !include security-groups.yml
+instances: !include instances.yml
+s3-buckets: !include s3-buckets.yml
+elbs: !include elbs.yml
+launch-configurations: !include launch-configurations.yml
+autoscaling-groups: !include autoscaling-groups.yml
+rds: !include rds.yml
+elasticache: !include elasticache.yml
+

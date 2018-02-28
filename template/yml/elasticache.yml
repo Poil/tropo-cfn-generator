@@ -1,0 +1,11 @@
+#template-ec-01:
+#    nodeType: cache.m3.large
+#    engine: memcached
+#    nodes: 2
+#    port: 11211
+#    security-groups:
+#    - sgMemcached
+#    subnets:
+#    - template-p-a-priv-01
+#    - template-p-b-priv-01
+

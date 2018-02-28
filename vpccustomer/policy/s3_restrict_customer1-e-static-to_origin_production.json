@@ -1,0 +1,21 @@
+{
+    "Action": [
+        "s3:GetObject"
+    ],
+    "Effect": "Deny",
+    "Resource": [
+        "arn:aws:s3:::customer-e-static/static/*",
+        "arn:aws:s3:::customer-e-static/static"
+        ],
+    "Condition": {
+        "NotIpAddress": {
+            "aws:SourceIp": [
+                "131.131.131.131/32",
+                "132.132.132.132/32",
+                "133.133.133.133/32"
+            ]
+        }
+    },
+    "Principal": "*"
+}
+

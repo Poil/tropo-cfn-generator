@@ -1,0 +1,271 @@
+ocptls-pi01-nat:
+    name: ocptls-pi01-nat
+    nat: yes
+    hostname: ocptls-pi01-nat
+    ami: CentOS7-20170208
+    instanceType: t2.small
+    subnetId: ocptls-p-a-pub-dmz-01
+    az: a
+    ebsSize: 15
+    enabled: y
+    public: y
+    availability: non-business-hours
+    security-groups:
+        - sgMAH
+        - sgLaxist
+    role: NAT
+    user-metadata : instances-nat.json.tpl
+    cloudformation-init: instances-common.dict
+    sourceDestCheck: false
+    policies:
+        ec2-natha:
+            type: ec2
+            access: natha
+
+ocptls-pi02-nat:
+    name: ocptls-pi02-nat
+    hostname: ocptls-pi02-nat
+    ami: CentOS7-20170208
+    instanceType: t2.small
+    subnetId: ocptls-p-b-pub-dmz-01
+    az: b
+    ebsSize: 15
+    enabled: y
+    public: y
+    availability: non-business-hours
+    security-groups:
+        - sgMAH
+        - sgLaxist
+    role: NAT
+    user-metadata : instances-nat.json.tpl
+    cloudformation-init: instances-common.dict
+    sourceDestCheck: false
+    policies:
+        ec2-natha:
+            type: ec2
+            access: natha
+
+ocptls-pi01-ssh:
+    name: ocptls-pi01-ssh
+    dependsOn: ocptls-pi01-natWaitCondition
+    hostname: ocptls-pi01-ssh
+    ami: CentOS7-20170208
+    instanceType: t2.small
+    subnetId: ocptls-p-a-priv-back-01
+    az: a
+    ebsSize: 15
+    enabled: y
+    public: n
+    availability: non-business-hours
+    security-groups:
+        - sgMAH
+        - sgBastion
+    role: bastion
+    user-metadata : instances-common.json.tpl
+    cloudformation-init: instances-common.dict
+    policies:
+        cloudwatch-rw:
+            type: cloudwatch
+            access: rw
+
+ocptls-pi01-pup:
+    name: ocptls-pi01-pup
+    dependsOn: ocptls-pi01-natWaitCondition
+    hostname: ocptls-pi01-pup
+    ami: CentOS7-20170208
+    instanceType: c4.large
+    subnetId: ocptls-p-a-priv-back-01
+    az: a
+    ebsSize: 50
+    snapshot_id: snap-3e9b4b17
+    enabled: y
+    public: n
+    availability: non-business-hours
+    security-groups:
+        - sgMAH
+        - sgPuppetServer
+    role: puppetmaster
+    user-metadata : instances-common.json.tpl
+    cloudformation-init: instances-common.dict
+    facts:
+        is_puppetmaster: yes
+
+ocptls-pi02-pup:
+    name: ocptls-pi02-pup
+    dependsOn: ocptls-pi02-natWaitCondition
+    hostname: ocptls-pi02-pup
+    ami: CentOS7-20170208
+    instanceType: c4.large
+    subnetId: ocptls-p-b-priv-back-01
+    az: b
+    ebsSize: 50
+    snapshot_id: snap-2a0b8f0a
+    enabled: y
+    public: n
+    availability: non-business-hours
+    security-groups:
+        - sgMAH
+        - sgPuppetServer
+    role: puppetmaster
+    user-metadata : instances-common.json.tpl
+    cloudformation-init: instances-common.dict
+    facts:
+        is_puppetmaster: yes
+
+ocptls-pi01-dns:
+    name: ocptls-pi01-dns
+    dependsOn: ocptls-pi01-natWaitCondition
+    hostname: ocptls-pi01-dns
+    ami: CentOS7-20170208
+    instanceType: t2.small
+    subnetId: ocptls-p-a-priv-back-01
+    az: a
+    ebsSize: 15
+    enabled: y
+    public: n
+    availability: non-business-hours
+    security-groups:
+        - sgMAH
+        - sgDnsServer
+    role: dns
+    user-metadata : instances-common.json.tpl
+    cloudformation-init: instances-common.dict
+
+ocptls-pi02-dns:
+    name: ocptls-pi02-dns
+    dependsOn: ocptls-pi02-natWaitCondition
+    hostname: ocptls-pi02-dns
+    ami: CentOS7-20170208
+    instanceType: t2.small
+    subnetId: ocptls-p-b-priv-back-01
+    az: b
+    ebsSize: 15
+    enabled: y
+    public: n
+    availability: non-business-hours
+    security-groups:
+        - sgMAH
+        - sgDnsServer
+    role: dns
+    user-metadata : instances-common.json.tpl
+    cloudformation-init: instances-common.dict
+
+ocptls-pi01-svc:
+    name: ocptls-pi01-svc
+    dependsOn: ocptls-pi01-natWaitCondition
+    hostname: ocptls-pi01-svc
+    ami: CentOS7-20170208
+    instanceType: t2.small
+    subnetId: ocptls-p-a-priv-back-01
+    az: a
+    ebsSize: 15
+    enabled: y
+    public: n
+    availability: non-business-hours
+    security-groups:
+        - sgMAH
+        - sgSvcProxy
+    role: dns
+    user-metadata : instances-common.json.tpl
+    cloudformation-init: instances-common.dict
+
+ocptls-pi02-svc:
+    name: ocptls-pi02-svc
+    dependsOn: ocptls-pi02-natWaitCondition
+    hostname: ocptls-pi02-svc
+    ami: CentOS7-20170208
+    instanceType: t2.small
+    subnetId: ocptls-p-b-priv-back-01
+    az: b
+    ebsSize: 15
+    enabled: y
+    public: n
+    availability: non-business-hours
+    security-groups:
+        - sgMAH
+        - sgSvcProxy
+    role: dns
+    user-metadata : instances-common.json.tpl
+    cloudformation-init: instances-common.dict
+
+ocptls-pi01-adm:
+    name: ocptls-pi01-adm
+    dependsOn: ocptls-pi01-natWaitCondition
+    hostname: ocptls-pi01-adm
+    ami: CentOS7-20170208
+    instanceType: t2.small
+    subnetId: ocptls-p-a-priv-back-01
+    az: a
+    ebsSize: 15
+    enabled: y
+    public: n
+    availability: non-business-hours
+    security-groups:
+        - sgMAH
+        - sgAdmin
+    role: admin
+    user-metadata : instances-common.json.tpl
+    cloudformation-init: instances-common.dict
+    policies:
+        ec2-fullaccess:
+            type: ec2
+            access: full
+
+ocptls-pi01-zbx:
+    name: ocptls-pi01-zbx
+    dependsOn: ocptls-pi01-natWaitCondition
+    hostname: ocptls-pi01-zbx
+    ami: CentOS7-20170208
+    instanceType: t2.small
+    subnetId: ocptls-p-a-priv-back-01
+    az: a
+    ebsSize: 15
+    enabled: y
+    public: n
+    availability: non-business-hours
+    security-groups:
+        - sgMAH
+        - sgZbxProxy
+    role: zbx
+    user-metadata : instances-common.json.tpl
+    cloudformation-init: instances-common.dict
+
+ocptls-pi02-zbx:
+    name: ocptls-pi02-zbx
+    dependsOn: ocptls-pi02-natWaitCondition
+    hostname: ocptls-pi02-zbx
+    ami: CentOS7-20170208
+    instanceType: t2.small
+    subnetId: ocptls-p-b-priv-back-01
+    az: b
+    ebsSize: 15
+    enabled: y
+    public: n
+    availability: non-business-hours
+    security-groups:
+        - sgMAH
+        - sgZbxProxy
+    role: zbx
+    user-metadata : instances-common.json.tpl
+    cloudformation-init: instances-common.dict
+
+ocptls-tw01-tmp:
+    name: ocptls-td01-tmp
+    dependsOn: ocptls-pi02-natWaitCondition
+    hostname: ocptls-td01-tmp
+    ami: Ubuntu1404-20170711
+    instanceType: t2.small
+    subnetId: ocptls-p-b-priv-back-01
+    az: b
+    ebsSize: 15
+    enabled: y
+    public: n
+    availability: non-business-hours
+    snapshot_id: snap-0f47e44ce3be7c922
+    disable_data_volume: false
+    security-groups:
+        - sgMAH
+    role: test
+    user-metadata : instances-common2.json.tpl
+    cloudformation-init: instances-common.dict
+

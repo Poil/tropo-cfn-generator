@@ -1,0 +1,33 @@
+#template-p-a-pub-dmz-01:
+#  cidr: 10.160.14.0/27
+#  az: a
+#  rt: template-p-pub-dmz
+#template-p-a-priv-01:
+#  cidr: 10.160.14.32/27
+#  az: a
+#  rt: template-p-a-priv
+#template-p-a-pub-elb-01:
+#  cidr: 10.160.14.64/26
+#  az: a
+#  rt: template-p-pub-elb
+## AZ B
+#template-p-b-pub-dmz-01:
+#  cidr: 10.160.14.128/27
+#  az: b
+#  rt: template-p-pub-dmz
+#template-p-b-priv-01:
+#  cidr: 10.160.14.160/27
+#  az: b
+#  rt: template-p-b-priv
+#template-p-b-pub-elb-01:
+#  cidr: 10.160.14.192/26
+#  az: b
+#  rt: template-p-pub-elb
+#template-p-a-priv-db-01:
+#  cidr: 10.160.15.0/28
+#  az: a
+#  rt: template-p-a-priv
+#template-p-b-priv-db-01:
+#  cidr: 10.160.15.16/28
+#  az: b
+#  rt: template-p-b-priv

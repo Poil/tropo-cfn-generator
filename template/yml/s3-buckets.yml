@@ -1,0 +1,11 @@
+#template-p-logs:
+#    access_control: 'Private'
+#    policies:
+#        s3-putobject:
+#            - template-p-web-pub
+#
+#template-p-static:
+#    access_control: 'Private'
+#
+#template-p-codedeploy:
+#    access_control: 'Private'

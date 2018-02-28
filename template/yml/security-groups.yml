@@ -1,0 +1,64 @@
+sgLaxist:
+    desc: Open Bar
+    in:
+        - tcp:any:10.0.0.0/8
+        - udp:any:10.0.0.0/8
+        - icmp:10.0.0.0/8
+    out:
+        - tcp:any:0.0.0.0/0
+        - udp:any:0.0.0.0/0
+        - icmp:0.0.0.0/0
+
+sgNatInstance:
+    desc: NAT Instance
+    in:
+        - tcp:http,https,ntp:0.0.0.0/0
+    out:
+        - tcp:any:0.0.0.0/0
+        - udp:any:0.0.0.0/0
+        - icmp:0.0.0.0/0
+
+sgMAH:
+    desc: security group pour les serveurs managed
+    in:
+        - tcp:ssh:10.71.0.0/22,sgBastion        # SSH
+        - udp:161:10.71.0.0/22,sgBastion        # SNMP
+        - tcp:10050:10.71.0.0/22,sgBastion      # Zabbix agentd
+        - icmp:10.71.0.0/22,sgBastion           # PING
+    out:
+        - udp:ntp:0.0.0.0/0                     # NTP
+        - tcp:dns:0.0.0.0/0                     # DNS
+        - udp:dns:0.0.0.0/0                     # DNS
+        - tcp:puppet:10.71.0.0/22               # Puppet
+        - tcp:61614:10.71.0.0/22                # MCO
+        - udp:25826:10.71.0.0/22                # Collectd
+        - tcp:10051:10.71.0.0/22                # Zabbix agentd
+        - tcp:http,https:0.0.0.0/0
+
+sgDnsServer:
+    desc: Dns Server
+    in:
+        - tcp:dns:10.0.0.0/8
+        - udp:dns:10.0.0.0/8
+    out:
+        - tcp:any:0.0.0.0/0
+        - udp:any:0.0.0.0/0
+        - icmp:0.0.0.0/0
+
+sgBastion:
+    desc: Bastion
+    out:
+        - tcp:http,https,ntp:0.0.0.0/0
+        - tcp:ssh:10.160.28.0/23
+        - tcp:3306:sgRdsDB
+        - tcp:53:10.71.0.0/22
+        - udp:53:10.71.0.0/22
+        - tcp:puppet:10.71.0.0/22
+        - tcp:61614:10.71.0.0/22
+        - icmp:0.0.0.0/0
+
+sgRdsDB:
+    desc: RDS PROD & PREPROD
+    in:
+        - tcp:3306:sgBastion
+

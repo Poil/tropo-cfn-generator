@@ -1,0 +1,52 @@
+account_id: '000000001'
+prefix: customer
+domain: example.com
+zone: customer
+
+region: eu-west-1
+defaultAZ: a
+
+vpc: !include vpc.yml
+subnets: !include subnets.yml
+route-tables: !include route-tables.yml
+security-groups: !include security-groups.yml
+instances: !include instances.yml
+s3-buckets: !include s3-buckets.yml
+elbs: !include elbs.yml
+launch-configurations: !include launch-configurations.yml
+autoscaling-groups: !include autoscaling-groups.yml
+rds: !include rds.yml
+elasticache: !include elasticache.yml
+sqs: !include sqs.yml
+
+s3bucket: customer
+r53_hosted_zone: X8QNNW9QRLLLY
+keypair: customer
+
+amis:
+  CentOS7-20150310: 
+    id: ami-1b00926c
+    bootdevice: /dev/sda1
+  Debian7-20150421: 
+    id: ami-71056706
+    bootdevice: /dev/xvda
+  Ubuntu1404-20150421:
+    id: ami-d213e0dd
+    bootdevice: /dev/sda1
+  Ubuntu1604-20170711:
+    id: ami-c413f0bd
+    bootdevice: /dev/sda1
+
+facts:
+  location: aws
+  client_code: mycustomer
+  project_code: myproject
+  platform: production
+  hosting_code: mah
+  node_name_fact: fqdn
+  node_name: facter
+  certname: generic-hostcert.aws
+  puppetmaster_srv: puppetmaster.tools.eu-west-1.ourcompany.com
+  puppetmaster_ca: puppetca.tools.eu-west-1.ourcompany.com
+  srv_domain: tools.eu-west-1.aws.
+

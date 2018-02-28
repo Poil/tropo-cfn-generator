@@ -1,0 +1,57 @@
+ocptls-p-a-priv-back-01:
+  cidr: 10.71.2.0/27
+  az: a
+  rt: ocptls-p-a-priv
+ocptls-p-a-priv-db-01:
+  cidr: 10.71.2.32/27
+  az: a
+  rt: ocptls-p-a-priv
+ocptls-p-a-priv-elb-01:
+  cidr: 10.71.2.64/27
+  az: a
+  rt: ocptls-p-a-priv
+ocptls-p-a-priv-front-01:
+  cidr: 10.71.2.96/27
+  az: a
+  rt: ocptls-p-a-priv
+ocptls-p-a-pub-dmz-01:
+  cidr: 10.71.2.128/28
+  az: a
+  rt: ocptls-p-pub
+ocptls-p-a-pub-elb-01:
+  cidr: 10.71.2.144/28
+  az: a
+  rt: ocptls-p-pub
+ocptls-p-a-priv-back-02:
+  cidr: 10.71.2.160/28
+  az: a
+  rt: ocptls-p-a-priv
+
+ocptls-p-b-priv-back-01:
+  cidr: 10.71.0.0/27
+  az: b
+  rt: ocptls-p-b-priv
+ocptls-p-b-priv-db-01:
+  cidr: 10.71.0.32/27
+  az: b
+  rt: ocptls-p-b-priv
+ocptls-p-b-priv-elb-01:
+  cidr: 10.71.0.64/27
+  az: b
+  rt: ocptls-p-b-priv
+ocptls-p-b-priv-front-01:
+  cidr: 10.71.0.96/27
+  az: b
+  rt: ocptls-p-b-priv
+ocptls-p-b-pub-dmz-01:
+  cidr: 10.71.0.128/28
+  az: b
+  rt: ocptls-p-pub
+ocptls-p-b-pub-elb-01:
+  cidr: 10.71.0.144/28
+  az: b
+  rt: ocptls-p-pub
+ocptls-p-b-priv-back-02:
+  cidr: 10.71.0.160/28
+  az: b
+  rt: ocptls-p-b-priv

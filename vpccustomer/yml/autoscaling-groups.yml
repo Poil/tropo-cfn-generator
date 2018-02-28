@@ -1,0 +1,33 @@
+customer-pw00-web:
+  name: customer-pw00-web
+  desired-capacity: 2
+  minsize: 2
+  maxsize: 10
+  cooldown: 10
+  launch-configuration: customer-pw00-web-r8
+  subnets:
+    - customer-p-a-priv-01
+    - customer-p-b-priv-01
+  az:
+    - a
+    - b
+  healthchecktype: 'EC2'
+  loadbalancers:
+    - customer-p-web-pub
+
+customer-pw00-adm:
+  name: customer-pw00-adm
+  desired-capacity: 2
+  minsize: 2
+  maxsize: 2
+  cooldown: 10
+  launch-configuration: customer-pw00-adm-r6
+  subnets:
+    - customer-p-a-priv-01
+    - customer-p-b-priv-01
+  az:
+    - a
+    - b
+  healthchecktype: 'EC2'
+  loadbalancers:
+    - customer-p-web-adm

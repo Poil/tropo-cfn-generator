@@ -1,0 +1,3859 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Parameters": {
+        "S3BucketURL": {
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "InternetGateway": {
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::InternetGateway"
+        },
+        "InternetGatewayAttachment": {
+            "Properties": {
+                "InternetGatewayId": {
+                    "Ref": "InternetGateway"
+                },
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::VPCGatewayAttachment"
+        },
+        "StackSecurityGroup": {
+            "Properties": {
+                "Parameters": {
+                    "TheVPC": {
+                        "Ref": "TheVPC"
+                    }
+                },
+                "TemplateURL": {
+                    "Fn::Join": [
+                        "/",
+                        [
+                            {
+                                "Ref": "S3BucketURL"
+                            },
+                            "vpccustomer_SG.json"
+                        ]
+                    ]
+                },
+                "TimeoutInMinutes": 60
+            },
+            "Type": "AWS::CloudFormation::Stack"
+        },
+        "StackSubnet": {
+            "Properties": {
+                "Parameters": {
+                    "InternetGateway": {
+                        "Ref": "InternetGateway"
+                    },
+                    "TheVPC": {
+                        "Ref": "TheVPC"
+                    }
+                },
+                "TemplateURL": {
+                    "Fn::Join": [
+                        "/",
+                        [
+                            {
+                                "Ref": "S3BucketURL"
+                            },
+                            "vpccustomer_SNET.json"
+                        ]
+                    ]
+                },
+                "TimeoutInMinutes": 60
+            },
+            "Type": "AWS::CloudFormation::Stack"
+        },
+        "TheVPC": {
+            "Properties": {
+                "CidrBlock": "10.160.14.0/23",
+                "EnableDnsHostnames": "true",
+                "EnableDnsSupport": "true",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "vpc mycustomer / myproject"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::VPC"
+        },
+        "customer1eapp1mail": {
+            "Type": "AWS::SQS::Queue"
+        },
+        "customer1estatic": {
+            "Properties": {
+                "AccessControl": "PublicRead",
+                "BucketName": "customer1-e-static",
+                "Tags": [
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ]
+            },
+            "Type": "AWS::S3::Bucket"
+        },
+        "customer1estaticBucketPolicy": {
+            "Properties": {
+                "Bucket": {
+                    "Ref": "customer1estatic"
+                },
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "s3:GetObject"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": "*",
+                            "Resource": "arn:aws:s3:::customer1-e-static/*"
+                        },
+                        {
+                            "Action": [
+                                "s3:GetObject"
+                            ],
+                            "Condition": {
+                                "NotIpAddress": {
+                                    "aws:SourceIp": [
+                                        "131.131.131.131/32",
+                                        "132.132.132.132/32",
+                                        "133.133.133.133/32"
+                                    ]
+                                }
+                            },
+                            "Effect": "Deny",
+                            "Principal": "*",
+                            "Resource": [
+                                "arn:aws:s3:::customer-e-static/static/*",
+                                "arn:aws:s3:::customer-e-static/static"
+                            ]
+                        }
+                    ]
+                }
+            },
+            "Type": "AWS::S3::BucketPolicy"
+        },
+        "customer1padmin": {
+            "Properties": {
+                "AllocatedStorage": 30,
+                "AllowMajorVersionUpgrade": false,
+                "AutoMinorVersionUpgrade": true,
+                "BackupRetentionPeriod": 7,
+                "DBInstanceClass": "db.r3.xlarge",
+                "DBInstanceIdentifier": "customer1-p-admin",
+                "DBName": "ADMIN",
+                "DBParameterGroupName": {
+                    "Ref": "customer1padminpg"
+                },
+                "DBSubnetGroupName": {
+                    "Ref": "customer1padminsng"
+                },
+                "Engine": "mysql",
+                "EngineVersion": "5.6",
+                "MasterUserPassword": "AZEAZEAZEAZZAE",
+                "MasterUsername": "root",
+                "MultiAZ": true,
+                "PubliclyAccessible": true,
+                "StorageType": "gp2",
+                "Tags": [
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours/db.r3.xlarge"
+                    }
+                ],
+                "VPCSecurityGroups": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgRdsDBId"
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::RDS::DBInstance"
+        },
+        "customer1padminpg": {
+            "Properties": {
+                "Description": "DB parameter group pour customer1padmin",
+                "Family": "MySQL5.6",
+                "Parameters": {
+                    "character_set_server": "utf8",
+                    "collation_server": "utf8_general_ci",
+                    "log_bin_trust_function_creators": "1",
+                    "max_allowed_packet": "134217728"
+                },
+                "Tags": [
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ]
+            },
+            "Type": "AWS::RDS::DBParameterGroup"
+        },
+        "customer1padminsng": {
+            "Properties": {
+                "DBSubnetGroupDescription": "subnet group for rds customer1padmin",
+                "SubnetIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customer1papubrds01Id"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customer1pbpubrds01Id"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customer1pcpubrds01Id"
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::RDS::DBSubnetGroup"
+        },
+        "customer1papp1": {
+            "Properties": {
+                "AccessControl": "Private",
+                "BucketName": "customer1-p-app1",
+                "Tags": [
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ]
+            },
+            "Type": "AWS::S3::Bucket"
+        },
+        "customer1papp1mail": {
+            "Type": "AWS::SQS::Queue"
+        },
+        "customer1paprivTo0ViaCustomer1Pi01Nat": {
+            "Properties": {
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "InstanceId": {
+                    "Ref": "customer1pi01nat"
+                },
+                "RouteTableId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.customer1paprivId"
+                    ]
+                }
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "customer1pbprivTo0ViaCustomer1Pi02Nat": {
+            "Properties": {
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "InstanceId": {
+                    "Ref": "customer1pi02nat"
+                },
+                "RouteTableId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.customer1pbprivId"
+                    ]
+                }
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "customer1pcodedeploy": {
+            "Properties": {
+                "AccessControl": "Private",
+                "BucketName": "customer1-p-codedeploy",
+                "Tags": [
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ]
+            },
+            "Type": "AWS::S3::Bucket"
+        },
+        "customer1pcprivTo0ViaCustomer1Pi03Nat": {
+            "Properties": {
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "InstanceId": {
+                    "Ref": "customer1pi03nat"
+                },
+                "RouteTableId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.customer1pcprivId"
+                    ]
+                }
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "customer1pdb1": {
+            "Properties": {
+                "AllocatedStorage": 20,
+                "AllowMajorVersionUpgrade": false,
+                "AutoMinorVersionUpgrade": true,
+                "BackupRetentionPeriod": 7,
+                "DBInstanceClass": "db.t2.small",
+                "DBInstanceIdentifier": "customer1-p-db1",
+                "DBParameterGroupName": {
+                    "Ref": "customer1pdb1pg"
+                },
+                "DBSnapshotIdentifier": "db1-last",
+                "DBSubnetGroupName": {
+                    "Ref": "customer1pdb1sng"
+                },
+                "Engine": "mysql",
+                "EngineVersion": "5.6",
+                "MasterUserPassword": "AEAZEAZEAZEAZAZE",
+                "MasterUsername": "root",
+                "MultiAZ": false,
+                "PubliclyAccessible": true,
+                "StorageType": "gp2",
+                "Tags": [
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours/db.t2.small"
+                    }
+                ],
+                "VPCSecurityGroups": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgRdsDBId"
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::RDS::DBInstance"
+        },
+        "customer1pdb1pg": {
+            "Properties": {
+                "Description": "DB parameter group pour customer1pdb1",
+                "Family": "MySQL5.6",
+                "Parameters": {
+                    "character_set_server": "utf8",
+                    "collation_server": "utf8_general_ci",
+                    "max_allowed_packet": "134217728"
+                },
+                "Tags": [
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ]
+            },
+            "Type": "AWS::RDS::DBParameterGroup"
+        },
+        "customer1pdb1sng": {
+            "Properties": {
+                "DBSubnetGroupDescription": "subnet group for rds customer1pdb1",
+                "SubnetIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customer1papubrds01Id"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customer1pbpubrds01Id"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customer1pcpubrds01Id"
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::RDS::DBSubnetGroup"
+        },
+        "customer1plogs": {
+            "Properties": {
+                "AccessControl": "Private",
+                "BucketName": "customer1-p-logs",
+                "Tags": [
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ]
+            },
+            "Type": "AWS::S3::Bucket"
+        },
+        "customer1plogsBucketPolicy": {
+            "Properties": {
+                "Bucket": {
+                    "Ref": "customer1plogs"
+                },
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "s3:PutObject"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": [
+                                    "156460612806"
+                                ]
+                            },
+                            "Resource": "arn:aws:s3:::customer1-p-logs/customer1-p-web-pub/AWSLogs/000000001/*"
+                        },
+                        {
+                            "Action": [
+                                "s3:PutObject"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "AWS": [
+                                    "156460612806"
+                                ]
+                            },
+                            "Resource": "arn:aws:s3:::customer1-p-logs/customer1-p-web-adm/AWSLogs/000000001/*"
+                        }
+                    ]
+                }
+            },
+            "Type": "AWS::S3::BucketPolicy"
+        },
+        "customer1pstatic": {
+            "Properties": {
+                "AccessControl": "Private",
+                "BucketName": "customer1-p-static",
+                "Tags": [
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ]
+            },
+            "Type": "AWS::S3::Bucket"
+        },
+        "customer1pstaticBucketPolicy": {
+            "Properties": {
+                "Bucket": {
+                    "Ref": "customer1pstatic"
+                },
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "s3:GetObject"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": "*",
+                            "Resource": "arn:aws:s3:::customer1-p-static/*"
+                        }
+                    ]
+                }
+            },
+            "Type": "AWS::S3::BucketPolicy"
+        },
+        "customer1pstaticadmin": {
+            "Properties": {
+                "AccessControl": "PublicRead",
+                "BucketName": "customer1-p-static-admin",
+                "Tags": [
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ]
+            },
+            "Type": "AWS::S3::Bucket"
+        },
+        "customer1pstaticadminBucketPolicy": {
+            "Properties": {
+                "Bucket": {
+                    "Ref": "customer1pstaticadmin"
+                },
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "s3:GetObject"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": "*",
+                            "Resource": "arn:aws:s3:::customer1-p-static-admin/*"
+                        }
+                    ]
+                }
+            },
+            "Type": "AWS::S3::BucketPolicy"
+        },
+        "customerec01": {
+            "Properties": {
+                "AZMode": "cross-az",
+                "AutoMinorVersionUpgrade": "true",
+                "CacheNodeType": "cache.m3.large",
+                "CacheSubnetGroupName": {
+                    "Ref": "customerec01ecsng"
+                },
+                "Engine": "memcached",
+                "NumCacheNodes": 2,
+                "Port": 11211,
+                "VpcSecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMemcachedId"
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::ElastiCache::CacheCluster"
+        },
+        "customerec01ecsng": {
+            "Properties": {
+                "Description": "subnet group for elasticache customerec01",
+                "SubnetIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customerpapriv01Id"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customerpbpriv01Id"
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::ElastiCache::SubnetGroup"
+        },
+        "customerew01web": {
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.customerew01web.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r customerew01web",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo puppetmaster_ca=puppetca.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo subrole=web",
+                                            "\n",
+                                            "echo puppetmaster_srv=puppetmaster.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo srv_domain=tools.eu-west-1.aws.",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=mycustomer",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=preproduction",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=webserver",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=myproject",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "customerew01webIamInstanceProfile"
+                },
+                "ImageId": "ami-d213e0dd",
+                "InstanceType": "t2.small",
+                "KeyName": "customer",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgEWebServerId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.customerpbpubdmz01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "preproduction"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "customer-ew01-web"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: customer-ew01-web\nfqdn: customer-ew01-web.customer.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\nssh_pwauth: 1\n\nbootcmd:\n - export LC_ALL=en_US.UTF-8\n - if ! blkid /dev/xvdc -t TYPE=\"ext4\"; then cloud-init-per once mymkfs mkfs.ext4 /dev/xvdc; fi\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - export LC_ALL=en_US.UTF-8\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "X8QNNW9QRLLLY",
+                                "\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"customer\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"customerew01web\" ]\n - [ sleep, 5 ]\n - \"while pgrep -f \\\"puppet agent: applying configuration\\\"; do sleep 2; done\"\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "customerew01webWaitHandle"
+                                },
+                                "\" ]\n\npuppet:\n  conf:\n    main:\n      ca_server: puppetca.tools.eu-west-1.aws.mydomain.local\n      srv_domain: tools.eu-west-1.aws.mydomain.local\n    agent:\n      server: puppetmaster.tools.eu-west-1.aws.mydomain.local\n      environment: production\n      certname: generic-hostcert.aws.mydomain.local\n      node_name: facter\n      node_name_fact: fqdn\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "customerew01webDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "customerew01webDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "Size": "70",
+                "SnapshotId": "snap-f5845ade",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer-ew01-web-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "customerew01webEIP": {
+            "Properties": {
+                "Domain": "vpc",
+                "InstanceId": {
+                    "Ref": "customerew01web"
+                }
+            },
+            "Type": "AWS::EC2::EIP"
+        },
+        "customerew01webIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "customerew01webIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "customerew01webIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/X8QNNW9QRLLLY"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudsearch:BuildSuggesters",
+                                        "cloudsearch:document",
+                                        "cloudsearch:IndexDocuments",
+                                        "cloudsearch:ListDomainNames",
+                                        "cloudsearch:search",
+                                        "cloudsearch:suggest"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:cloudsearch:eu-west-1:000000001:domain/customer-e-myapp"
+                                }
+                            ]
+                        },
+                        "PolicyName": "cloudsearch-search"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudsearch:BuildSuggesters",
+                                        "cloudsearch:document",
+                                        "cloudsearch:IndexDocuments",
+                                        "cloudsearch:ListDomainNames",
+                                        "cloudsearch:search",
+                                        "cloudsearch:suggest"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:cloudsearch:eu-west-1:000000001:domain/customer-p-myapp"
+                                }
+                            ]
+                        },
+                        "PolicyName": "cloudsearch-p-search"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "ses:SendEmail",
+                                        "ses:SendRawEmail",
+                                        "ses:SendQuota"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "ses-sendmail"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "codedeploy:*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "code-deploy-fullaccess"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "sqs:GetQueueAttributes",
+                                        "sqs:GetQueueUrl",
+                                        "sqs:ListQueues",
+                                        "sqs:ReceiveMessage",
+                                        "sqs:SendMessage",
+                                        "sqs:DeleteMessage",
+                                        "sqs:DeleteMessageBatch",
+                                        "sqs:SendMessageBatch"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:sqs:eu-west-1:000000001:stack-customer-customeremyapp-2DK298AMCXHW2"
+                                }
+                            ]
+                        },
+                        "PolicyName": "sqs-rw"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:ListBucket",
+                                        "s3:GetBucketLocation"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-static"
+                                },
+                                {
+                                    "Action": [
+                                        "s3:PutObject*",
+                                        "s3:GetObject*",
+                                        "s3:DeleteObject*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-static/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "s3-rw-customer-p-static"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudwatch:Get*",
+                                        "cloudwatch:Put*",
+                                        "ec2:Describe*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "cloudwatch-rw"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:ListBucket",
+                                        "s3:GetBucketLocation"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-codedeploy"
+                                },
+                                {
+                                    "Action": [
+                                        "s3:PutObject*",
+                                        "s3:GetObject*",
+                                        "s3:DeleteObject*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-codedeploy/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "s3-rw-customer-p-codedeploy"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:ListBucket",
+                                        "s3:GetBucketLocation"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-e-myapp"
+                                },
+                                {
+                                    "Action": [
+                                        "s3:PutObject*",
+                                        "s3:GetObject*",
+                                        "s3:DeleteObject*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-e-myapp/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "s3-rw-customer-e-myapp"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "sqs:GetQueueAttributes",
+                                        "sqs:GetQueueUrl",
+                                        "sqs:ListQueues",
+                                        "sqs:ReceiveMessage",
+                                        "sqs:SendMessage",
+                                        "sqs:DeleteMessage",
+                                        "sqs:DeleteMessageBatch",
+                                        "sqs:SendMessageBatch"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:sqs:eu-west-1:000000001:stack-customer-customerpmyapp-H0Q29KAZMUSJQ"
+                                }
+                            ]
+                        },
+                        "PolicyName": "sqs-p-rw"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:ListBucket",
+                                        "s3:GetBucketLocation"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-myapp"
+                                },
+                                {
+                                    "Action": [
+                                        "s3:PutObject*",
+                                        "s3:GetObject*",
+                                        "s3:DeleteObject*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-myapp/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "s3-rw-customer-p-myapp"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "customerew01webWaitCondition": {
+            "DependsOn": "customerew01web",
+            "Properties": {
+                "Handle": {
+                    "Ref": "customerew01webWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "customerew01webWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "customerpf01ftp": {
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.customerpf01ftp.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r customerpf01ftp",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo puppetmaster_ca=puppetca.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo subrole=ftp",
+                                            "\n",
+                                            "echo puppetmaster_srv=puppetmaster.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo srv_domain=tools.eu-west-1.aws.",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=mycustomer",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=filer",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=myproject",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "customerpf01ftpIamInstanceProfile"
+                },
+                "ImageId": "ami-d213e0dd",
+                "InstanceType": "t2.small",
+                "KeyName": "customer",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgFTPId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.customerpapubdmz01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "customer-pf01-ftp"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: customer-pf01-ftp\nfqdn: customer-pf01-ftp.customer.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\nssh_pwauth: 1\n\nbootcmd:\n - export LC_ALL=en_US.UTF-8\n - if ! blkid /dev/xvdc -t TYPE=\"ext4\"; then cloud-init-per once mymkfs mkfs.ext4 /dev/xvdc; fi\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - export LC_ALL=en_US.UTF-8\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "X8QNNW9QRLLLY",
+                                "\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"customer\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"customerpf01ftp\" ]\n - [ sleep, 5 ]\n - \"while pgrep -f \\\"puppet agent: applying configuration\\\"; do sleep 2; done\"\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "customerpf01ftpWaitHandle"
+                                },
+                                "\" ]\n\npuppet:\n  conf:\n    main:\n      ca_server: puppetca.tools.eu-west-1.aws.mydomain.local\n      srv_domain: tools.eu-west-1.aws.mydomain.local\n    agent:\n      server: puppetmaster.tools.eu-west-1.aws.mydomain.local\n      environment: production\n      certname: generic-hostcert.aws.mydomain.local\n      node_name: facter\n      node_name_fact: fqdn\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "customerpf01ftpDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "customerpf01ftpDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer-pf01-ftp-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "customerpf01ftpEIP": {
+            "Properties": {
+                "Domain": "vpc",
+                "InstanceId": {
+                    "Ref": "customerpf01ftp"
+                }
+            },
+            "Type": "AWS::EC2::EIP"
+        },
+        "customerpf01ftpIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "customerpf01ftpIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "customerpf01ftpIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/X8QNNW9QRLLLY"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudwatch:Get*",
+                                        "cloudwatch:Put*",
+                                        "ec2:Describe*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "cloudwatch-rw"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "customerpf01ftpWaitCondition": {
+            "DependsOn": "customerpf01ftp",
+            "Properties": {
+                "Handle": {
+                    "Ref": "customerpf01ftpWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "customerpf01ftpWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "customerpi01dns": {
+            "DependsOn": "customerpi01natWaitCondition",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.customerpi01dns.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r customerpi01dns",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo puppetmaster_ca=puppetca.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo subrole=dns",
+                                            "\n",
+                                            "echo puppetmaster_srv=puppetmaster.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo srv_domain=tools.eu-west-1.aws.",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=mycustomer",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=myproject",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "customerpi01dnsIamInstanceProfile"
+                },
+                "ImageId": "ami-1b00926c",
+                "InstanceType": "t2.micro",
+                "KeyName": "customer",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgDnsServerId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.customerpapriv01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "customer-pi01-dns"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: customer-pi01-dns\nfqdn: customer-pi01-dns.customer.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\nssh_pwauth: 1\n\nbootcmd:\n - export LC_ALL=en_US.UTF-8\n - if ! blkid /dev/xvdc -t TYPE=\"ext4\"; then cloud-init-per once mymkfs mkfs.ext4 /dev/xvdc; fi\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - export LC_ALL=en_US.UTF-8\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "X8QNNW9QRLLLY",
+                                "\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"customer\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"customerpi01dns\" ]\n - [ sleep, 5 ]\n - \"while pgrep -f \\\"puppet agent: applying configuration\\\"; do sleep 2; done\"\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "customerpi01dnsWaitHandle"
+                                },
+                                "\" ]\n\npuppet:\n  conf:\n    main:\n      ca_server: puppetca.tools.eu-west-1.aws.mydomain.local\n      srv_domain: tools.eu-west-1.aws.mydomain.local\n    agent:\n      server: puppetmaster.tools.eu-west-1.aws.mydomain.local\n      environment: production\n      certname: generic-hostcert.aws.mydomain.local\n      node_name: facter\n      node_name_fact: fqdn\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "customerpi01dnsDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "customerpi01dnsDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer-pi01-dns-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "customerpi01dnsIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "customerpi01dnsIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "customerpi01dnsIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/X8QNNW9QRLLLY"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudwatch:Get*",
+                                        "cloudwatch:Put*",
+                                        "ec2:Describe*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "cloudwatch-rw"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "customerpi01dnsWaitCondition": {
+            "DependsOn": "customerpi01dns",
+            "Properties": {
+                "Handle": {
+                    "Ref": "customerpi01dnsWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "customerpi01dnsWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "customerpi01nat": {
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.customerpi01nat.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r customerpi01nat",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo puppetmaster_ca=puppetca.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo subrole=nat",
+                                            "\n",
+                                            "echo puppetmaster_srv=puppetmaster.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo srv_domain=tools.eu-west-1.aws.",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=mycustomer",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=myproject",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "customerpi01natIamInstanceProfile"
+                },
+                "ImageId": "ami-1b00926c",
+                "InstanceType": "t2.micro",
+                "KeyName": "customer",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgLaxistId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "false",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.customerpapubdmz01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "customer-pi01-nat"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: customer-pi01-nat\nfqdn: customer-pi01-nat.customer.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\nssh_pwauth: 1\n\nwrite_files:\n - content: |\n     net.ipv4.ip_forward = 1\n     net.ipv4.conf.eth0.send_redirects = 0\n   permissions: '0644'\n   path: /etc/sysctl.d/nat.conf\n\nbootcmd:\n - export LC_ALL=en_US.UTF-8\n - if ! blkid /dev/xvdc -t TYPE=\"ext4\"; then cloud-init-per once mymkfs mkfs.ext4 /dev/xvdc; fi\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - iptables -t nat -A POSTROUTING -o eth0 -s \"0.0.0.0/0\" -j MASQUERADE\n - echo 1 >/proc/sys/net/ipv4/ip_forward\n - echo 0 >/proc/sys/net/ipv4/conf/eth0/send_redirects\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - export LC_ALL=en_US.UTF-8\n - iptables-save >/etc/sysconfig/iptables\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "X8QNNW9QRLLLY",
+                                "\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"customer\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"customerpi01nat\" ]\n - [ sleep, 5 ]\n - \"while pgrep -f \\\"puppet agent: applying configuration\\\"; do sleep 2; done\"\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "customerpi01natWaitHandle"
+                                },
+                                "\" ]\n\npuppet:\n  conf:\n    main:\n      ca_server: puppetca.tools.eu-west-1.aws.mydomain.local\n      srv_domain: tools.eu-west-1.aws.mydomain.local\n    agent:\n      server: puppetmaster.tools.eu-west-1.aws.mydomain.local\n      environment: production\n      certname: generic-hostcert.aws.mydomain.local\n      node_name: facter\n      node_name_fact: fqdn\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "customerpi01natDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "customerpi01natDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer-pi01-nat-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "customerpi01natEIP": {
+            "Properties": {
+                "Domain": "vpc",
+                "InstanceId": {
+                    "Ref": "customerpi01nat"
+                }
+            },
+            "Type": "AWS::EC2::EIP"
+        },
+        "customerpi01natIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "customerpi01natIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "customerpi01natIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/X8QNNW9QRLLLY"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudwatch:Get*",
+                                        "cloudwatch:Put*",
+                                        "ec2:Describe*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "cloudwatch-rw"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "customerpi01natWaitCondition": {
+            "DependsOn": "customerpi01nat",
+            "Properties": {
+                "Handle": {
+                    "Ref": "customerpi01natWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "customerpi01natWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "customerpi01ssh": {
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.customerpi01ssh.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r customerpi01ssh",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo puppetmaster_ca=puppetca.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo subrole=ssh",
+                                            "\n",
+                                            "echo puppetmaster_srv=puppetmaster.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo srv_domain=tools.eu-west-1.aws.",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=mycustomer",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=myproject",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "customerpi01sshIamInstanceProfile"
+                },
+                "ImageId": "ami-1b00926c",
+                "InstanceType": "t2.small",
+                "KeyName": "customer",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgBastionId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.customerpapubdmz01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "customer-pi01-ssh"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: customer-pi01-ssh\nfqdn: customer-pi01-ssh.customer.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\nssh_pwauth: 1\n\nbootcmd:\n - export LC_ALL=en_US.UTF-8\n - if ! blkid /dev/xvdc -t TYPE=\"ext4\"; then cloud-init-per once mymkfs mkfs.ext4 /dev/xvdc; fi\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - export LC_ALL=en_US.UTF-8\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "X8QNNW9QRLLLY",
+                                "\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"customer\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"customerpi01ssh\" ]\n - [ sleep, 5 ]\n - \"while pgrep -f \\\"puppet agent: applying configuration\\\"; do sleep 2; done\"\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "customerpi01sshWaitHandle"
+                                },
+                                "\" ]\n\npuppet:\n  conf:\n    main:\n      ca_server: puppetca.tools.eu-west-1.aws.mydomain.local\n      srv_domain: tools.eu-west-1.aws.mydomain.local\n    agent:\n      server: puppetmaster.tools.eu-west-1.aws.mydomain.local\n      environment: production\n      certname: generic-hostcert.aws.mydomain.local\n      node_name: facter\n      node_name_fact: fqdn\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "customerpi01sshDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "customerpi01sshDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer-pi01-ssh-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "customerpi01sshEIP": {
+            "Properties": {
+                "Domain": "vpc",
+                "InstanceId": {
+                    "Ref": "customerpi01ssh"
+                }
+            },
+            "Type": "AWS::EC2::EIP"
+        },
+        "customerpi01sshIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "customerpi01sshIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "customerpi01sshIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/X8QNNW9QRLLLY"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-static"
+                                },
+                                {
+                                    "Action": [
+                                        "s3:*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-static/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "s3-rw-customer-p-static"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "ec2:Describe"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "ec2-ro"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStacks",
+                                        "cloudformation:DescribeStackEvents",
+                                        "cloudformation:DescribeStackResource",
+                                        "cloudformation:DescribeStackResources",
+                                        "cloudformation:GetTemplate",
+                                        "cloudformation:List*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "cfn-fulldescribe"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudwatch:Get*",
+                                        "cloudwatch:Put*",
+                                        "ec2:Describe*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "cloudwatch-rw"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "customerpi01sshWaitCondition": {
+            "DependsOn": "customerpi01ssh",
+            "Properties": {
+                "Handle": {
+                    "Ref": "customerpi01sshWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "customerpi01sshWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "customerpi02nat": {
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.customerpi02nat.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r customerpi02nat",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo puppetmaster_ca=puppetca.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo subrole=nat",
+                                            "\n",
+                                            "echo puppetmaster_srv=puppetmaster.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo srv_domain=tools.eu-west-1.aws.",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=mycustomer",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=myproject",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "customerpi02natIamInstanceProfile"
+                },
+                "ImageId": "ami-1b00926c",
+                "InstanceType": "t2.micro",
+                "KeyName": "customer",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgLaxistId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "false",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.customerpbpubdmz01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "customer-pi02-nat"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: customer-pi02-nat\nfqdn: customer-pi02-nat.customer.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\nssh_pwauth: 1\n\nwrite_files:\n - content: |\n     net.ipv4.ip_forward = 1\n     net.ipv4.conf.eth0.send_redirects = 0\n   permissions: '0644'\n   path: /etc/sysctl.d/nat.conf\n\nbootcmd:\n - export LC_ALL=en_US.UTF-8\n - if ! blkid /dev/xvdc -t TYPE=\"ext4\"; then cloud-init-per once mymkfs mkfs.ext4 /dev/xvdc; fi\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - iptables -t nat -A POSTROUTING -o eth0 -s \"0.0.0.0/0\" -j MASQUERADE\n - echo 1 >/proc/sys/net/ipv4/ip_forward\n - echo 0 >/proc/sys/net/ipv4/conf/eth0/send_redirects\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - export LC_ALL=en_US.UTF-8\n - iptables-save >/etc/sysconfig/iptables\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "X8QNNW9QRLLLY",
+                                "\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"customer\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"customerpi02nat\" ]\n - [ sleep, 5 ]\n - \"while pgrep -f \\\"puppet agent: applying configuration\\\"; do sleep 2; done\"\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "customerpi02natWaitHandle"
+                                },
+                                "\" ]\n\npuppet:\n  conf:\n    main:\n      ca_server: puppetca.tools.eu-west-1.aws.mydomain.local\n      srv_domain: tools.eu-west-1.aws.mydomain.local\n    agent:\n      server: puppetmaster.tools.eu-west-1.aws.mydomain.local\n      environment: production\n      certname: generic-hostcert.aws.mydomain.local\n      node_name: facter\n      node_name_fact: fqdn\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "customerpi02natDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "customerpi02natDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer-pi02-nat-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "customerpi02natEIP": {
+            "Properties": {
+                "Domain": "vpc",
+                "InstanceId": {
+                    "Ref": "customerpi02nat"
+                }
+            },
+            "Type": "AWS::EC2::EIP"
+        },
+        "customerpi02natIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "customerpi02natIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "customerpi02natIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/X8QNNW9QRLLLY"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudwatch:Get*",
+                                        "cloudwatch:Put*",
+                                        "ec2:Describe*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "cloudwatch-rw"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "customerpi02natWaitCondition": {
+            "DependsOn": "customerpi02nat",
+            "Properties": {
+                "Handle": {
+                    "Ref": "customerpi02natWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "customerpi02natWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "customerpi03nat": {
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.customerpi03nat.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r customerpi03nat",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo puppetmaster_ca=puppetca.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo subrole=nat",
+                                            "\n",
+                                            "echo puppetmaster_srv=puppetmaster.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo srv_domain=tools.eu-west-1.aws.",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=mycustomer",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=myproject",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1c",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "customerpi03natIamInstanceProfile"
+                },
+                "ImageId": "ami-1b00926c",
+                "InstanceType": "t2.micro",
+                "KeyName": "customer",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgLaxistId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "false",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.customerpcpubdmz01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "customer-pi03-nat"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: customer-pi03-nat\nfqdn: customer-pi03-nat.customer.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\nssh_pwauth: 1\n\nwrite_files:\n - content: |\n     net.ipv4.ip_forward = 1\n     net.ipv4.conf.eth0.send_redirects = 0\n   permissions: '0644'\n   path: /etc/sysctl.d/nat.conf\n\nbootcmd:\n - export LC_ALL=en_US.UTF-8\n - if ! blkid /dev/xvdc -t TYPE=\"ext4\"; then cloud-init-per once mymkfs mkfs.ext4 /dev/xvdc; fi\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - iptables -t nat -A POSTROUTING -o eth0 -s \"0.0.0.0/0\" -j MASQUERADE\n - echo 1 >/proc/sys/net/ipv4/ip_forward\n - echo 0 >/proc/sys/net/ipv4/conf/eth0/send_redirects\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - export LC_ALL=en_US.UTF-8\n - iptables-save >/etc/sysconfig/iptables\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "X8QNNW9QRLLLY",
+                                "\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"customer\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"customerpi03nat\" ]\n - [ sleep, 5 ]\n - \"while pgrep -f \\\"puppet agent: applying configuration\\\"; do sleep 2; done\"\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "customerpi03natWaitHandle"
+                                },
+                                "\" ]\n\npuppet:\n  conf:\n    main:\n      ca_server: puppetca.tools.eu-west-1.aws.mydomain.local\n      srv_domain: tools.eu-west-1.aws.mydomain.local\n    agent:\n      server: puppetmaster.tools.eu-west-1.aws.mydomain.local\n      environment: production\n      certname: generic-hostcert.aws.mydomain.local\n      node_name: facter\n      node_name_fact: fqdn\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "customerpi03natDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "customerpi03natDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1c",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer-pi03-nat-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "customerpi03natEIP": {
+            "Properties": {
+                "Domain": "vpc",
+                "InstanceId": {
+                    "Ref": "customerpi03nat"
+                }
+            },
+            "Type": "AWS::EC2::EIP"
+        },
+        "customerpi03natIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "customerpi03natIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "customerpi03natIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/X8QNNW9QRLLLY"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudwatch:Get*",
+                                        "cloudwatch:Put*",
+                                        "ec2:Describe*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "cloudwatch-rw"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "customerpi03natWaitCondition": {
+            "DependsOn": "customerpi03nat",
+            "Properties": {
+                "Handle": {
+                    "Ref": "customerpi03natWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "customerpi03natWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "customerpw00admAutoscalingGroup": {
+            "Properties": {
+                "AvailabilityZones": [
+                    "eu-west-1a",
+                    "eu-west-1b"
+                ],
+                "Cooldown": 10,
+                "DesiredCapacity": 2,
+                "HealthCheckType": "EC2",
+                "LaunchConfigurationName": {
+                    "Ref": "customerpw00admr6LaunchConfiguration"
+                },
+                "LoadBalancerNames": [
+                    {
+                        "Ref": "customerpwebadm"
+                    }
+                ],
+                "MaxSize": 2,
+                "MinSize": 2,
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "PropagateAtLaunch": true,
+                        "Value": "myproject"
+                    },
+                    {
+                        "Key": "environment",
+                        "PropagateAtLaunch": true,
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "PropagateAtLaunch": true,
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "Name",
+                        "PropagateAtLaunch": true,
+                        "Value": "customer-pw00-adm"
+                    },
+                    {
+                        "Key": "schedule",
+                        "PropagateAtLaunch": true,
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "VPCZoneIdentifier": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customerpapriv01Id"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customerpbpriv01Id"
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::AutoScaling::AutoScalingGroup"
+        },
+        "customerpw00webAutoscalingGroup": {
+            "Properties": {
+                "AvailabilityZones": [
+                    "eu-west-1a",
+                    "eu-west-1b"
+                ],
+                "Cooldown": 10,
+                "DesiredCapacity": 2,
+                "HealthCheckType": "EC2",
+                "LaunchConfigurationName": {
+                    "Ref": "customerpw00webr8LaunchConfiguration"
+                },
+                "LoadBalancerNames": [
+                    {
+                        "Ref": "customerpwebpub"
+                    }
+                ],
+                "MaxSize": 10,
+                "MinSize": 2,
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "PropagateAtLaunch": true,
+                        "Value": "myproject"
+                    },
+                    {
+                        "Key": "environment",
+                        "PropagateAtLaunch": true,
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "PropagateAtLaunch": true,
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "Name",
+                        "PropagateAtLaunch": true,
+                        "Value": "customer-pw00-web"
+                    },
+                    {
+                        "Key": "schedule",
+                        "PropagateAtLaunch": true,
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "VPCZoneIdentifier": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customerpapriv01Id"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customerpbpriv01Id"
+                        ]
+                    }
+                ]
+            },
+            "Type": "AWS::AutoScaling::AutoScalingGroup"
+        },
+        "customerpw00webr8LaunchConfiguration": {
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.customerpw00webr8LaunchConfiguration.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r customerpw00webr8LaunchConfiguration",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo status=production",
+                                            "\n",
+                                            "echo subrole=web",
+                                            "\n",
+                                            "echo puppetmaster_srv=puppetmaster.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo puppetmaster_ca=puppetca.tools.eu-west-1.ourcompany.com",
+                                            "\n",
+                                            "echo srv_domain=tools.eu-west-1.aws.",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=mycustomer",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=webserver",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=myproject",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "true",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    },
+                    {
+                        "DeviceName": "/dev/sdc",
+                        "Ebs": {
+                            "DeleteOnTermination": "true",
+                            "VolumeSize": "50",
+                            "VolumeType": "gp2"
+                        }
+                    }
+                ],
+                "IamInstanceProfile": {
+                    "Ref": "customerpw00webr8LaunchConfigurationIamLaunchConfigurationProfile"
+                },
+                "ImageId": "ami-d213e0dd",
+                "InstanceType": "m4.large",
+                "KeyName": "customer",
+                "SecurityGroups": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgPWebServerId"
+                        ]
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\npreserve_hostname: False\nmanage_etc_hosts: true\nssh_pwauth: 1\n\nbootcmd:\n - export LC_ALL=en_US.UTF-8\n - if ! blkid /dev/xvdc -t TYPE=\"ext4\"; then cloud-init-per once mymkfs mkfs.ext4 /dev/xvdc; fi\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - export LC_ALL=en_US.UTF-8\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "X8QNNW9QRLLLY",
+                                "\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"customer\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"customerpw00webr8LaunchConfiguration\" ]\n - [ sleep, 5 ]\n - \"while pgrep -f \\\"puppet agent: applying configuration\\\"; do sleep 2; done\"\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ puppet, agent, -t ]\n - [ 'true' ]\n\npuppet:\n  conf:\n    main:\n      ca_server: puppetca.tools.eu-west-1.aws.mydomain.local\n      srv_domain: tools.eu-west-1.aws.mydomain.local\n    agent:\n      server: puppetmaster.tools.eu-west-1.aws.mydomain.local\n      environment: production\n      certname: generic-hostcert.aws.mydomain.local\n      node_name: facter\n      node_name_fact: fqdn\n"
+                            ]
+                        ]
+                    }
+                }
+            },
+            "Type": "AWS::AutoScaling::LaunchConfiguration"
+        },
+        "customerpw00webr8LaunchConfigurationIamLaunchConfigurationProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "customerpw00webr8LaunchConfigurationIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "customerpw00webr8LaunchConfigurationIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/X8QNNW9QRLLLY"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:ListBucket",
+                                        "s3:GetBucketLocation"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-satis"
+                                },
+                                {
+                                    "Action": [
+                                        "s3:GetObject"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-satis/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "s3-ro-customer-p-satis"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:ListBucket",
+                                        "s3:GetBucketLocation"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-codedeploy"
+                                },
+                                {
+                                    "Action": [
+                                        "s3:GetObject"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-codedeploy/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "s3-ro-customer-p-codedeploy"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "autoscaling:CompleteLifecycleAction",
+                                        "autoscaling:DeleteLifecycleHook",
+                                        "autoscaling:DescribeAutoScalingGroups",
+                                        "autoscaling:DescribeLifecycleHooks",
+                                        "autoscaling:PutLifecycleHook",
+                                        "autoscaling:RecordLifecycleActionHeartbeat",
+                                        "ec2:DescribeInstances",
+                                        "ec2:DescribeInstanceStatus",
+                                        "tag:GetTags",
+                                        "tag:GetResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "code-deploy-ro"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:ListBucket",
+                                        "s3:GetBucketLocation"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-static"
+                                },
+                                {
+                                    "Action": [
+                                        "s3:PutObject*",
+                                        "s3:GetObject*",
+                                        "s3:DeleteObject*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-static/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "s3-rw-customer-p-static"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudsearch:BuildSuggesters",
+                                        "cloudsearch:document",
+                                        "cloudsearch:IndexDocuments",
+                                        "cloudsearch:ListDomainNames",
+                                        "cloudsearch:search",
+                                        "cloudsearch:suggest"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:cloudsearch:eu-west-1:000000001:domain/customer-p-myapp"
+                                }
+                            ]
+                        },
+                        "PolicyName": "cloudsearch-p-search"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "sqs:GetQueueAttributes",
+                                        "sqs:GetQueueUrl",
+                                        "sqs:ListQueues",
+                                        "sqs:ReceiveMessage",
+                                        "sqs:SendMessage",
+                                        "sqs:DeleteMessage",
+                                        "sqs:DeleteMessageBatch",
+                                        "sqs:SendMessageBatch"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:sqs:eu-west-1:000000001:*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "sqs-p-rw"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "s3:ListBucket",
+                                        "s3:GetBucketLocation"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-myapp"
+                                },
+                                {
+                                    "Action": [
+                                        "s3:PutObject*",
+                                        "s3:GetObject*",
+                                        "s3:DeleteObject*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:s3:::customer-p-myapp/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "s3-rw-customer-p-myapp"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudwatch:Get*",
+                                        "cloudwatch:Put*",
+                                        "ec2:Describe*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "cloudwatch-rw"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "customerpwebadm": {
+            "DependsOn": "customerplogsBucketPolicy",
+            "Properties": {
+                "AccessLoggingPolicy": {
+                    "EmitInterval": 5,
+                    "Enabled": true,
+                    "S3BucketName": "customer-p-logs",
+                    "S3BucketPrefix": "customer-p-web-adm"
+                },
+                "CrossZone": "false",
+                "HealthCheck": {
+                    "HealthyThreshold": 4,
+                    "Interval": 15,
+                    "Target": "TCP:80",
+                    "Timeout": 5,
+                    "UnhealthyThreshold": 2
+                },
+                "Instances": [],
+                "Listeners": [
+                    {
+                        "InstancePort": "80",
+                        "InstanceProtocol": "TCP",
+                        "LoadBalancerPort": "80",
+                        "Protocol": "TCP"
+                    }
+                ],
+                "Policies": [
+                    {
+                        "Attributes": [
+                            {
+                                "Name": "ProxyProtocol",
+                                "Value": "true"
+                            }
+                        ],
+                        "InstancePorts": [
+                            80
+                        ],
+                        "PolicyName": "EnableProxyProtocol",
+                        "PolicyType": "ProxyProtocolPolicyType"
+                    }
+                ],
+                "Scheme": "internet-facing",
+                "SecurityGroups": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgPElbWebPubId"
+                        ]
+                    }
+                ],
+                "Subnets": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customerpapubelb01Id"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customerpbpubelb01Id"
+                        ]
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ]
+            },
+            "Type": "AWS::ElasticLoadBalancing::LoadBalancer"
+        },
+        "customerpwebpub": {
+            "DependsOn": "customerplogsBucketPolicy",
+            "Properties": {
+                "AccessLoggingPolicy": {
+                    "EmitInterval": 5,
+                    "Enabled": true,
+                    "S3BucketName": "customer-p-logs",
+                    "S3BucketPrefix": "customer-p-web-pub"
+                },
+                "CrossZone": "false",
+                "HealthCheck": {
+                    "HealthyThreshold": 4,
+                    "Interval": 15,
+                    "Target": "HTTP:80/monitoring/big-ip.html",
+                    "Timeout": 5,
+                    "UnhealthyThreshold": 2
+                },
+                "Instances": [],
+                "Listeners": [
+                    {
+                        "InstancePort": "80",
+                        "InstanceProtocol": "HTTP",
+                        "LoadBalancerPort": "80",
+                        "Protocol": "HTTP"
+                    },
+                    {
+                        "InstancePort": "80",
+                        "InstanceProtocol": "HTTP",
+                        "LoadBalancerPort": "443",
+                        "Protocol": "HTTPS",
+                        "SSLCertificateId": "arn:aws:acm:eu-west-1:0000000000000:certificate/1231231-e123-1239-ac12-1223dz2231233"
+                    }
+                ],
+                "Scheme": "internet-facing",
+                "SecurityGroups": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgPElbWebPubId"
+                        ]
+                    }
+                ],
+                "Subnets": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customerpapubelb01Id"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSubnet",
+                            "Outputs.customerpbpubelb01Id"
+                        ]
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ]
+            },
+            "Type": "AWS::ElasticLoadBalancing::LoadBalancer"
+        },
+        "dhcpoptsetassoccustomer": {
+            "Properties": {
+                "DhcpOptionsId": {
+                    "Ref": "dhcpoptsetcustomer"
+                },
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::VPCDHCPOptionsAssociation"
+        },
+        "dhcpoptsetcustomer": {
+            "Properties": {
+                "DomainName": "customer.eu-west-1.example.com",
+                "DomainNameServers": [
+                    "10.71.2.22",
+                    "10.71.0.30"
+                ]
+            },
+            "Type": "AWS::EC2::DHCPOptions"
+        }
+    }
+}

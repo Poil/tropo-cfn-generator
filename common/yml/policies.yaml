@@ -1,0 +1,243 @@
+cfn:
+  describe:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action: 
+            - "cloudformation:DescribeStackResource"
+          Resource: '#{resource}'
+  fulldescribe:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "cloudformation:DescribeStacks"
+            - "cloudformation:DescribeStackEvents"
+            - "cloudformation:DescribeStackResource"
+            - "cloudformation:DescribeStackResources"
+            - "cloudformation:GetTemplate"
+            - "cloudformation:List*"
+          Resource: '#{resource}'
+
+cloudwatch:
+  ro:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action: "cloudwatch:Get*"
+          Resource: '#{resource}'
+  rw:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "cloudwatch:Get*"
+            - "cloudwatch:Put*"
+            - "ec2:Describe*"
+          Resource: '#{resource}'
+
+sqs:
+  rw:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "sqs:GetQueueAttributes"
+            - "sqs:GetQueueUrl"
+            - "sqs:ListQueues"
+            - "sqs:ReceiveMessage"
+            - "sqs:SendMessage"
+            - "sqs:DeleteMessage"
+            - "sqs:DeleteMessageBatch"
+            - "sqs:SendMessageBatch"
+          Resource: '#{resource}'
+
+ses:
+  sendmail:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "ses:SendEmail"
+            - "ses:SendRawEmail"
+            - "ses:SendQuota"
+          Resource: '#{resource}'
+
+cloudsearch:
+  search:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "cloudsearch:BuildSuggesters"
+            - "cloudsearch:document"
+            - "cloudsearch:IndexDocuments"
+            - "cloudsearch:ListDomainNames"
+            - "cloudsearch:search"
+            - "cloudsearch:suggest"
+          Resource: '#{resource}'
+        
+r53:
+  rw:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "route53:ChangeResourceRecordSets"
+            - "route53:ListResourceRecordSets"
+          Resource: 'arn:aws:route53:::hostedzone/#{resource}'
+        - Effect: Allow
+          Action: 
+            - "route53:GetChange"
+          Resource: 'arn:aws:route53:::change/*'
+
+codedeploy:
+  fullaccess:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "codedeploy:*"
+          Resource: '#{resource}'
+  deployer:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "codedeploy:Batch*"
+            - "codedeploy:CreateDeployment"
+            - "codedeploy:Get*"
+            - "codedeploy:List*"
+            - "codedeploy:RegisterApplicationRevision"
+          Resource: '#{resource}'
+  ro:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "autoscaling:CompleteLifecycleAction"
+            - "autoscaling:DeleteLifecycleHook"
+            - "autoscaling:DescribeAutoScalingGroups"
+            - "autoscaling:DescribeLifecycleHooks"
+            - "autoscaling:PutLifecycleHook"
+            - "autoscaling:RecordLifecycleActionHeartbeat"
+            - "ec2:DescribeInstances"
+            - "ec2:DescribeInstanceStatus"
+            - "tag:GetTags"
+            - "tag:GetResource"
+          Resource: '#{resource}'
+
+s3:
+  ro:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "s3:ListBucket"
+            - "s3:GetBucketLocation"
+          Resource: '#{resource}'
+        - Effect: Allow
+          Action:
+            - s3:GetObject
+          Resource: '#{resource}/*'
+  rw:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "s3:ListBucket"
+            - "s3:GetBucketLocation"
+          Resource: '#{resource}'
+        - Effect: Allow
+          Action:
+            - "s3:PutObject*"
+            - "s3:GetObject*"
+            - "s3:DeleteObject*"
+          Resource: '#{resource}/*'
+  full:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "s3:*"
+          Resource: '#{resource}'
+        - Effect: Allow
+          Action:
+            - "s3:*"
+          Resource: '#{resource}/*'
+
+ec2:
+  full:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "ec2:AttachVolume"
+            - "ec2:CreateVolume"
+            - "ec2:DeleteVolume"
+            - "ec2:CreateKeypair"
+            - "ec2:DeleteKeypair"
+            - "ec2:CreateSecurityGroup"
+            - "ec2:DeleteSecurityGroup"
+            - "ec2:AuthorizeSecurityGroupIngress"
+            - "ec2:CreateImage"
+            - "ec2:RunInstances"
+            - "ec2:TerminateInstances"
+            - "ec2:StopInstances"
+            - "ec2:DescribeVolumes"
+            - "ec2:DetachVolume"
+            - "ec2:DescribeInstances"
+            - "ec2:CreateSnapshot"
+            - "ec2:DeleteSnapshot"
+            - "ec2:DescribeSnapshots"
+            - "ec2:DescribeImages"
+            - "ec2:RegisterImage"
+            - "ec2:CreateTags"
+            - "ec2:ModifyImageAttribute"
+          Resource: '#{resource}'
+  eip:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "ec2:DescribeInstances"
+            - "ec2:DescribeNetworkInterfaces"
+            - "ec2:DescribeAddresses"
+            - "ec2:AssociateAddress"
+            - "ec2:DisassociateAddress"
+          Resource: '#{resource}'
+  natha:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "ec2:DescribeInstances"
+            - "ec2:DescribeRouteTables"
+            - "ec2:CreateRoute"
+            - "ec2:ReplaceRoute"
+            - "ec2:StartInstances"
+            - "ec2:StopInstances"
+          Resource: '#{resource}'
+  ro:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "ec2:Describe"
+          Resource: '#{resource}'
+
+elb:
+  rw:
+    PolicyDocument:
+      Statement:
+        - Effect: Allow
+          Action:
+            - "elasticloadbalancing:Describe*"
+            - "elasticloadbalancing:DeregisterInstancesFromLoadBalancer"
+            - "elasticloadbalancing:RegisterInstancesWithLoadBalancer"
+            - "autoscaling:Describe*"
+            - "autoscaling:EnterStandby"
+            - "autoscaling:ExitStandby"
+            - "autoscaling:UpdateAutoScalingGroup"
+          Resource: '#{resource}'
+

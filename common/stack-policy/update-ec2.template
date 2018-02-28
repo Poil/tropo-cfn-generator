@@ -1,0 +1,14 @@
+{
+	"Statement" : [
+	{
+		"Effect" : "Allow",
+		"Action" : "Update:Modify",
+		"Principal": "*",
+		"Resource" : "*",
+		"Condition" : {
+			"StringEquals" : {
+				"ResourceType" : ["AWS::EC2::*","AWS::CloudFormation::Stack","AWS::IAM::*"]
+			}
+		}
+	} ]
+}

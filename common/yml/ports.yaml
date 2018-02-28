@@ -1,0 +1,17 @@
+ssh: 22
+http: 80
+https: 443
+oracle: 1521
+dns: 53
+ntp: 123
+rdp: 3389
+telnet: 23
+ftp: 21
+smtp: 25
+pop3: 110
+imap4: 143
+mysql: 3306
+memcache: 11211
+solr: 8080
+puppet: 8140
+

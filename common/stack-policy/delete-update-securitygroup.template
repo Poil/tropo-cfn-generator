@@ -1,0 +1,26 @@
+{
+	"Statement" : [
+	{
+		"Effect" : "Allow",
+		"Action" : "Update:Modify",
+		"Principal": "*",
+		"Resource" : "*",
+		"Condition" : {
+			"StringEquals" : {
+				"ResourceType" : ["AWS::CloudFormation::Stack","AWS::EC2::*","AWS::EC2::SecurityGroup"]
+			}
+		}
+	},
+	{
+		"Effect" : "Allow",
+		"Action" : "Update:*",
+		"Principal": "*",
+		"Resource" : "*",
+		"Condition" : {
+			"StringEquals" : {
+				"ResourceType" : ["AWS::EC2::SecurityGroup"]
+			}
+		}
+	}
+    ]
+}

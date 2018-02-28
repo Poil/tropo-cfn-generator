@@ -1,0 +1,38 @@
+customer1-p-pub-dmz:
+    propagation: true
+    routes:
+     - to: 0.0.0.0/0
+       via: internet-gateway
+     - to: 10.71.0.0/22
+       via: pcx-98976bf2
+customer1-p-pub-elb:
+    propagation: true
+    routes:
+     - to: 0.0.0.0/0
+       via: internet-gateway
+     - to: 10.71.0.0/22
+       via: pcx-98976bf2
+customer1-p-a-priv:
+    propagation: true
+    dependsOn: customer1-pi01-nat
+    routes:
+     - to: 0.0.0.0/0
+       via: customer1-pi01-nat
+     - to: 10.71.0.0/22
+       via: pcx-98976bf2
+customer1-p-b-priv:
+    propagation: true
+    dependsOn: customer1-pi02-nat
+    routes:
+     - to: 0.0.0.0/0
+       via: customer1-pi02-nat
+     - to: 10.71.0.0/22
+       via: pcx-98976bf1
+customer1-p-c-priv:
+    propagation: true
+    dependsOn: customer1-pi03-nat
+    routes:
+     - to: 0.0.0.0/0
+       via: customer1-pi03-nat
+     - to: 10.71.0.0/22
+       via: pcx-98976bf1

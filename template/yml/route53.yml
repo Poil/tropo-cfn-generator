@@ -1,0 +1,13 @@
+template:
+    type: private
+    main: True
+#    vpc:
+#        v123123123: eu-west-1
+#otherdomain:
+#    type: public
+#    name: otherdomain.ourcompany.com
+#aprivatedomain:
+#    type: private
+#    name: aprivatedomain.forced.fqdn.ourcompany.com
+#anotherprivatedomain:
+#    type: private

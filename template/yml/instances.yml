@@ -1,0 +1,124 @@
+#template-pi01-nat:
+#    name: template-pi01-nat
+#    nat: yes
+#    hostname: template-pi01-nat
+#    ami: CentOS7-20150310
+#    instanceType: t2.micro
+#    subnetId: template-p-a-pub-dmz-01
+#    az: a
+#    ebsSize: 15
+#    enabled: y
+#    public: y
+#    availability: non-business-hours
+#    security-groups:
+#        - sgLaxist
+#    user-metadata : instances-nat.json.tpl
+#    cloudformation-init: instances-common.dict
+#    sourceDestCheck: false
+#
+#template-pi02-nat:
+#    name: template-pi02-nat
+#    hostname: template-pi02-nat
+#    ami: CentOS7-20150310
+#    instanceType: t2.micro
+#    subnetId: template-p-b-pub-dmz-01
+#    az: b
+#    ebsSize: 15
+#    enabled: y
+#    public: y
+#    availability: non-business-hours
+#    security-groups:
+#        - sgLaxist
+#    user-metadata : instances-nat.json.tpl
+#    cloudformation-init: instances-common.dict
+#    sourceDestCheck: false
+#
+#template-pi01-ssh:
+#    name: template-pi01-ssh
+#    hostname: template-pi01-ssh
+#    ami: CentOS7-20150310
+#    instanceType: t2.small
+#    subnetId: template-p-a-pub-dmz-01
+#    az: a
+#    ebsSize: 15
+#    enabled: y
+#    public: y
+#    availability: non-business-hours
+#    security-groups:
+#        - sgBastion
+#    user-metadata : instances-common.json.tpl
+#    cloudformation-init: instances-common.dict
+#    policies:
+#        s3-rw-template-p-codedeploy:
+#            bucket: template-p-codedeploy
+#            type: s3
+#            access: rw
+#        code-deploy-fullaccess:
+#            type: codedeploy
+#            access: fullaccess
+#
+#template-pi01-dns:
+#    name: template-pi01-dns
+#    dependsOn: template-pi01-natWaitCondition
+#    hostname: template-pi01-dns
+#    ami: CentOS7-20150310
+#    instanceType: t2.micro
+#    subnetId: template-p-a-priv-01
+#    az: a
+#    ebsSize: 15
+#    enabled: y
+#    public: n
+#    availability: non-business-hours
+#    security-groups:
+#        - sgDnsServer
+#    user-metadata : instances-common.json.tpl
+#    cloudformation-init: instances-common.dict
+#
+########################################################
+## Customer Instances 
+#######################################################
+#template-ew01-web:
+#    name: template-ew01-web
+#    hostname: template-ew01-web
+#    ami: Ubuntu1404-20150421
+#    instanceType: t2.small
+#    subnetId: template-p-b-pub-dmz-01
+#    az: b
+#    ebsSize: 50
+#    enabled: y
+#    public: y
+#    availability: business-hours-no-autostart/9-19
+#    security-groups:
+#        - sgMAH
+#        - sgEWebServer        
+#    user-metadata : instances-common.json.tpl
+#    cloudformation-init: instances-common.dict
+#    policies:
+#        s3-ro-template-p-codedeploy:
+#            bucket: template-p-codedeploy
+#            type: s3
+#            access: ro
+#
+###########################
+## We restore a snapshot
+##########################
+#
+#template-pj01-web:
+#    name: template-pj01-web
+#    dependsOn: template-pi01-natWaitCondition
+#    hostname: template-pj01-web
+#    ami: Ubuntu1404-20150421
+#    instanceType: m3.large
+#    subnetId: template-p-a-priv-01
+#    az: a
+#    ebsSize: 15
+#    enabled: y
+#    snapshot_id: snap-123909
+#    public: n
+#    availability: non-business-hours
+#    security-groups:
+#        - sgMAH
+#        - sgPBatch
+#    user-metadata : instances-common.json.tpl
+#    cloudformation-init: instances-common.dict
+#

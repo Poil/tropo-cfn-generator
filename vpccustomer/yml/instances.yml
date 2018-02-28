@@ -1,0 +1,201 @@
+customer-pi01-nat:
+  name: customer-pi01-nat
+  nat: yes
+  hostname: customer-pi01-nat
+  ami: CentOS7-20150310
+  instanceType: t2.micro
+  subnetId: customer-p-a-pub-dmz-01
+  az: a
+  ebsSize: 15
+  enabled: y
+  public: y
+  availability: non-business-hours
+  security-groups:
+    - sgLaxist
+    - sgMAH
+  user-metadata : instances-nat.json.tpl
+  cloudformation-init: instances-common.dict
+  sourceDestCheck: false
+  policies:
+    cloudwatch-rw:
+      type: cloudwatch
+      access: rw
+
+customer-pi02-nat:
+  name: customer-pi02-nat
+  hostname: customer-pi02-nat
+  ami: CentOS7-20150310
+  instanceType: t2.micro
+  subnetId: customer-p-b-pub-dmz-01
+  az: b
+  ebsSize: 15
+  enabled: y
+  public: y
+  availability: non-business-hours
+  security-groups:
+    - sgLaxist
+    - sgMAH
+  user-metadata : instances-nat.json.tpl
+  cloudformation-init: instances-common.dict
+  sourceDestCheck: false
+  policies:
+    cloudwatch-rw:
+      type: cloudwatch
+      access: rw
+
+customer-pi03-nat:
+  name: customer-pi03-nat
+  hostname: customer-pi03-nat
+  ami: CentOS7-20150310
+  instanceType: t2.micro
+  subnetId: customer-p-c-pub-dmz-01
+  az: c
+  ebsSize: 15
+  enabled: y
+  public: y
+  availability: non-business-hours
+  security-groups:
+    - sgLaxist
+    - sgMAH
+  user-metadata : instances-nat.json.tpl
+  cloudformation-init: instances-common.dict
+  sourceDestCheck: false
+  policies:
+    cloudwatch-rw:
+      type: cloudwatch
+      access: rw
+
+customer-pi01-ssh:
+  name: customer-pi01-ssh
+  hostname: customer-pi01-ssh
+  ami: CentOS7-20150310
+  instanceType: t2.small
+  subnetId: customer-p-a-pub-dmz-01
+  az: a
+  ebsSize: 15
+  enabled: y
+  public: y
+  availability: non-business-hours
+  security-groups:
+    - sgBastion
+    - sgMAH
+  user-metadata : instances-common.json.tpl
+  cloudformation-init: instances-common.dict
+  policies:
+    s3-rw-customer-p-static:
+      bucket: customer-p-static
+      type: s3
+      access: full
+    ec2-ro:
+      type: ec2
+      access: ro
+    cfn-fulldescribe:
+      type: cfn
+      access: fulldescribe
+    cloudwatch-rw:
+      type: cloudwatch
+      access: rw
+
+customer-pi01-dns:
+  name: customer-pi01-dns
+  dependsOn: customer-pi01-natWaitCondition
+  hostname: customer-pi01-dns
+  ami: CentOS7-20150310
+  instanceType: t2.micro
+  subnetId: customer-p-a-priv-01
+  az: a
+  ebsSize: 15
+  enabled: y
+  public: n
+  availability: non-business-hours
+  security-groups:
+    - sgDnsServer
+    - sgMAH
+  user-metadata : instances-common.json.tpl
+  cloudformation-init: instances-common.dict
+  policies:
+    cloudwatch-rw:
+      type: cloudwatch
+      access: rw
+
+customer-pf01-ftp:
+  name: customer-pf01-ftp
+  hostname: customer-pf01-ftp
+  ami: Ubuntu1404-20150421
+  instanceType: t2.small
+  subnetId: customer-p-a-pub-dmz-01
+  az: a
+  ebsSize: 15
+  enabled: y
+  public: y
+  availability: non-business-hours
+  security-groups:
+    - sgFTP
+    - sgMAH
+  user-metadata : instances-common.json.tpl
+  cloudformation-init: instances-common.dict
+  policies:
+    cloudwatch-rw:
+      type: cloudwatch
+      access: rw
+
+customer-ew01-web:
+  name: customer-ew01-web
+  hostname: customer-ew01-web
+  ami: Ubuntu1404-20150421
+  instanceType: t2.small
+  subnetId: customer-p-b-pub-dmz-01
+  az: b
+  ebsSize: 70
+  snapshot_id: snap-f5845ade
+  enabled: y
+  public: y
+  availability: non-business-hours
+  security-groups:
+    - sgMAH
+    - sgEWebServer
+  user-metadata : instances-common.json.tpl
+  cloudformation-init: instances-common.dict
+  policies:
+    s3-rw-customer-p-static:
+      bucket: customer-p-static
+      type: s3
+      access: rw
+    s3-rw-customer-e-myapp:
+      bucket: customer-e-myapp
+      type: s3
+      access: rw
+    s3-rw-customer-p-myapp:
+      bucket: customer-p-myapp
+      type: s3
+      access: rw
+    s3-rw-customer-p-codedeploy:
+      bucket: customer-p-codedeploy
+      type: s3
+      access: rw
+    code-deploy-fullaccess:
+      type: codedeploy
+      access: fullaccess
+    sqs-rw:
+      type: sqs
+      access: rw
+      queue: stack-customer-customeremyapp-2DK298AMCXHW2
+    sqs-p-rw:
+      type: sqs
+      access: rw
+      queue: stack-customer-customerpmyapp-H0Q29KAZMUSJQ
+    cloudsearch-search:
+      type: cloudsearch
+      access: search
+      domain: customer-e-myapp
+    cloudsearch-p-search:
+      type: cloudsearch
+      access: search
+      domain: customer-p-myapp
+    ses-sendmail:
+      type: ses
+      access: sendmail
+    cloudwatch-rw:
+      type: cloudwatch
+      access: rw
+

@@ -1,0 +1,30 @@
+#template-p-pub-dmz:
+#    propagation: true
+#    routes:
+#     - to: 0.0.0.0/0
+#       via: internet-gateway
+#     - to: 10.71.0.0/22
+#       via: pcx-98976bf1
+#template-p-pub-elb:
+#    propagation: true
+#    routes:
+#     - to: 0.0.0.0/0
+#       via: internet-gateway
+#     - to: 10.71.0.0/22
+#       via: pcx-98976bf1
+#template-p-a-priv:
+#    propagation: true
+#    dependsOn: template-pi01-nat
+#    routes:
+#     - to: 0.0.0.0/0
+#       via: template-pi01-nat
+#     - to: 10.71.0.0/22
+#       via: pcx-98976bf1
+#template-p-b-priv:
+#    propagation: true
+#    dependsOn: template-pi02-nat
+#    routes:
+#     - to: 0.0.0.0/0
+#       via: template-pi02-nat
+#     - to: 10.71.0.0/22
+#       via: pcx-98976bf1

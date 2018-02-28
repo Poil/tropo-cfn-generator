@@ -1,0 +1,51 @@
+account_id: '58222115895'
+prefix: ocptls
+domain: example.com
+zone: tools
+r53_hosted_zone: WJ79KGNBKDQZL
+vgw: vgw-1b21176f
+
+region: eu-west-1
+defaultAZ: a
+vpc: vpc-9nfd1dkf
+s3bucket: clatls
+
+amis:
+  CentOS7-20170208:
+    id: ami-06022660
+    bootdevice: /dev/sda1
+  Debian7-20170208:
+    id: ami-aa0a2ecc
+    bootdevice: /dev/xvda
+  Ubuntu1404-20170711:
+    id: ami-b809eac1
+    bootdevice: /dev/sda1
+  Debian8-20170208:
+    id: ami-b81430de
+    bootdevice: /dev/sda1
+
+dns:
+  - 10.7.0.9
+  - 10.2.3.10
+  - 10.2.3.7
+
+# keypair before running
+keypair: ocptls-keypair
+
+vpc: !include vpc.yml
+subnets: !include subnets.yml
+route-tables: !include route-tables.yml
+security-groups: !include security-groups.yml
+instances: !include instances.yml
+
+# Puppet Facts
+facts:
+  location: aws
+  client_code: ourcompany
+  platform: production
+  project_code: tools
+  hosting_code: mah
+  node_name_fact: fqdn
+  node_name: facter
+  certname: generic-hostcert.aws
+

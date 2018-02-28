@@ -1,0 +1,53 @@
+# ####################################################################
+# production
+# ####################################################################
+#
+
+customer1-p-db1:
+    engine: mysql
+    version-major: 5
+    version-minor: 6
+    publicly-accessible: true
+    class: db.t2.small
+    multiAZ: no
+    storage-type: gp2
+    size: 20
+    security-groups:
+        - sgRdsDB
+    master-user: root
+    master-password: AEAZEAZEAZEAZAZE
+    dbname: db1
+    subnets:
+        - customer1-p-a-pub-rds-01
+        - customer1-p-b-pub-rds-01
+        - customer1-p-c-pub-rds-01
+    parameters:
+      max_allowed_packet: 134217728
+      character_set_server: utf8
+      collation_server: utf8_general_ci
+    availability: non-business-hours
+    snapshot_id: db1-last
+
+customer1-p-admin:
+    engine: mysql
+    version-major: 5
+    version-minor: 6
+    publicly-accessible: true
+    class: db.r3.xlarge
+    multiAZ: yes
+    storage-type: gp2
+    size: 30
+    security-groups:
+        - sgRdsDB
+    master-user: root
+    master-password: AZEAZEAZEAZZAE
+    dbname: ADMIN
+    subnets:
+        - customer1-p-a-pub-rds-01
+        - customer1-p-b-pub-rds-01
+        - customer1-p-c-pub-rds-01
+    parameters:
+      max_allowed_packet: 134217728
+      character_set_server: utf8
+      collation_server: utf8_general_ci
+      log_bin_trust_function_creators: '1'

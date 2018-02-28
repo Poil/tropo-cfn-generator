@@ -1,0 +1,48 @@
+## ####################################################################
+## production
+## ####################################################################
+##
+#
+#template-p-rubizz:
+#    engine: mysql
+#    version-major: 5
+#    version-minor: 6
+#    class: db.r3.large
+#    multiAZ: yes
+#    storage-type: gp2
+#    size: 20
+#    security-groups:
+#    - sgRdsDB
+#    master-user: root
+#    master-password: 9D7t4sgzLKdvVfS8
+#    dbname: RUBIZZ
+#    subnets:
+#    - template-p-a-priv-db-01
+#    - template-p-b-priv-db-01
+#    parameters:
+#      max_allowed_packet: 134217728
+#      character_set_server: utf8
+#      collation_server: utf8_general_ci
+#    availability: business-hours/9-21/db.m1.small
+#
+#template-p-admin:
+#    engine: mysql
+#    version-major: 5
+#    version-minor: 6
+#    class: db.r3.large
+#    multiAZ: yes
+#    storage-type: gp2
+#    size: 20
+#    security-groups:
+#    - sgRdsDB
+#    master-user: root
+#    master-password: AiSae6Shiux6xohW
+#    dbname: ADMIN
+#    subnets:
+#    - template-p-a-priv-db-01
+#    - template-p-b-priv-db-01
+#    parameters:
+#      max_allowed_packet: 134217728
+#      character_set_server: utf8
+#      collation_server: utf8_general_ci
+#    availability: business-hours/9-21/db.m1.small

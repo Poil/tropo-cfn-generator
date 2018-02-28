@@ -1,0 +1,37 @@
+# gestion standard stack
+# TODO : argument
+PROJECT=vpccustomer
+
+SELF_DIR:=$(dir $(lastword $(MAKEFILE_LIST)))
+S3BUCKET=$(PROJECT)
+STACK=stack-$(PROJECT)
+TEMPLATE=$(PROJECT)
+PROFILE=${PROJECT}-cfn
+POLICY?=deny-all.template
+
+INIT_PATH=$(SELF_DIR)/files
+
+REGION=eu-west-1
+
+default:
+	@echo "pas de cible par defaut..."
+
+deploy: makeCfn pushToS3 pushPolicyToS3 stackUpdate
+
+makeCfn:
+	@python create-cfn.py $(PROJECT) json/$(TEMPLATE).json
+
+pushToS3:
+	python upload-stack.py $(S3BUCKET) $(PROFILE) $(TEMPLATE) 'init/'
+
+pushPolicyToS3:
+	python upload-policy.py $(PROFILE) $(S3BUCKET) $(POLICY)
+
+stackDelete:
+	python delete-stack.py $(PROFILE) $(STACK)
+
+stackUpdate:
+	python deploy-stack.py $(PROFILE) $(STACK) $(S3BUCKET) $(TEMPLATE).json $(POLICY)
+
+protectStack:
+	python set-secure-policy.py $(STACK) $(PROFILE) $(S3BUCKET)

@@ -1,0 +1,14 @@
+#template-p-web-pub:
+#    health-protocol: HTTP
+#    health-port: 80
+#    health-path: /monitoring/big-ip.html
+#    listeners:
+#        - HTTP:80
+#    public: y
+#    security-groups:
+#        - sgPElbWebPub
+#    subnets:
+#        - template-p-a-pub-elb-01
+#        - template-p-b-pub-elb-01
+#    accesslogging:
+#        bucket: template-p-logs

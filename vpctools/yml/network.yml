@@ -1,0 +1,32 @@
+# internet-gateway: igw-8bd02fee
+
+
+# CGW
+# name: cg-mycompany-tools-sd-01
+# type: ipsec.1
+# bgp asn: 64513
+# ip: 89.185.58.109
+# routing : dynamic
+
+# vgw 
+# vpg-mycompany-tools
+# state : attached
+# type : ipsec.1
+ 
+# vpn connexion
+# cpn-mycompany-tools-sd-01
+# vgw => previous
+# cgw => previous
+# type: ipsec.1
+# routing : dynamic
+# Tunnel 1
+# 87.238.85.44
+# DOWN
+# 2014-11-21 18:27 UTC+1
+# IPSEC IS DOWN
+# Tunnel 2
+# 87.238.85.42
+# DOWN
+# 2014-11-21 18:27 UTC+1
+# IPSEC IS DOWN
+

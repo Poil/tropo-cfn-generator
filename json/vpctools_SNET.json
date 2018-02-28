@@ -1,0 +1,793 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Outputs": {
+        "ocptlspaprivId": {
+            "Value": {
+                "Ref": "ocptlspapriv"
+            }
+        },
+        "ocptlspaprivback01Id": {
+            "Value": {
+                "Ref": "ocptlspaprivback01"
+            }
+        },
+        "ocptlspaprivback02Id": {
+            "Value": {
+                "Ref": "ocptlspaprivback02"
+            }
+        },
+        "ocptlspaprivdb01Id": {
+            "Value": {
+                "Ref": "ocptlspaprivdb01"
+            }
+        },
+        "ocptlspaprivelb01Id": {
+            "Value": {
+                "Ref": "ocptlspaprivelb01"
+            }
+        },
+        "ocptlspaprivfront01Id": {
+            "Value": {
+                "Ref": "ocptlspaprivfront01"
+            }
+        },
+        "ocptlspapubdmz01Id": {
+            "Value": {
+                "Ref": "ocptlspapubdmz01"
+            }
+        },
+        "ocptlspapubelb01Id": {
+            "Value": {
+                "Ref": "ocptlspapubelb01"
+            }
+        },
+        "ocptlspbprivId": {
+            "Value": {
+                "Ref": "ocptlspbpriv"
+            }
+        },
+        "ocptlspbprivback01Id": {
+            "Value": {
+                "Ref": "ocptlspbprivback01"
+            }
+        },
+        "ocptlspbprivback02Id": {
+            "Value": {
+                "Ref": "ocptlspbprivback02"
+            }
+        },
+        "ocptlspbprivdb01Id": {
+            "Value": {
+                "Ref": "ocptlspbprivdb01"
+            }
+        },
+        "ocptlspbprivelb01Id": {
+            "Value": {
+                "Ref": "ocptlspbprivelb01"
+            }
+        },
+        "ocptlspbprivfront01Id": {
+            "Value": {
+                "Ref": "ocptlspbprivfront01"
+            }
+        },
+        "ocptlspbpubdmz01Id": {
+            "Value": {
+                "Ref": "ocptlspbpubdmz01"
+            }
+        },
+        "ocptlspbpubelb01Id": {
+            "Value": {
+                "Ref": "ocptlspbpubelb01"
+            }
+        },
+        "ocptlsppubId": {
+            "Value": {
+                "Ref": "ocptlsppub"
+            }
+        }
+    },
+    "Parameters": {
+        "InternetGateway": {
+            "Type": "String"
+        },
+        "TheVPC": {
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "ocptlspapriv": {
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-a-priv"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::RouteTable"
+        },
+        "ocptlspaprivTo178258944ViaPcxDde979Ba3": {
+            "Properties": {
+                "DestinationCidrBlock": "10.160.4.0/23",
+                "RouteTableId": {
+                    "Ref": "ocptlspapriv"
+                },
+                "VpcPeeringConnectionId": "pcx-dde979ba3"
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "ocptlspaprivTo178259456ViaPcx6D887B05": {
+            "Properties": {
+                "DestinationCidrBlock": "10.160.6.0/23",
+                "RouteTableId": {
+                    "Ref": "ocptlspapriv"
+                },
+                "VpcPeeringConnectionId": "pcx-6d887b05"
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "ocptlspaprivback01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "CidrBlock": "10.71.2.0/27",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-a-priv-back-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "ocptlspaprivback01Assoocptlspapriv": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ocptlspapriv"
+                },
+                "SubnetId": {
+                    "Ref": "ocptlspaprivback01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "ocptlspaprivback02": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "CidrBlock": "10.71.2.160/28",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-a-priv-back-02"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "ocptlspaprivback02Assoocptlspapriv": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ocptlspapriv"
+                },
+                "SubnetId": {
+                    "Ref": "ocptlspaprivback02"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "ocptlspaprivdb01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "CidrBlock": "10.71.2.32/27",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-a-priv-db-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "ocptlspaprivdb01Assoocptlspapriv": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ocptlspapriv"
+                },
+                "SubnetId": {
+                    "Ref": "ocptlspaprivdb01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "ocptlspaprivelb01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "CidrBlock": "10.71.2.64/27",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-a-priv-elb-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "ocptlspaprivelb01Assoocptlspapriv": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ocptlspapriv"
+                },
+                "SubnetId": {
+                    "Ref": "ocptlspaprivelb01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "ocptlspaprivfront01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "CidrBlock": "10.71.2.96/27",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-a-priv-front-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "ocptlspaprivfront01Assoocptlspapriv": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ocptlspapriv"
+                },
+                "SubnetId": {
+                    "Ref": "ocptlspaprivfront01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "ocptlspapubdmz01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "CidrBlock": "10.71.2.128/28",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-a-pub-dmz-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "ocptlspapubdmz01Assoocptlsppub": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ocptlsppub"
+                },
+                "SubnetId": {
+                    "Ref": "ocptlspapubdmz01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "ocptlspapubelb01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "CidrBlock": "10.71.2.144/28",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-a-pub-elb-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "ocptlspapubelb01Assoocptlsppub": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ocptlsppub"
+                },
+                "SubnetId": {
+                    "Ref": "ocptlspapubelb01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "ocptlspbpriv": {
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-b-priv"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::RouteTable"
+        },
+        "ocptlspbprivTo178258944ViaPcxDde979Ba3": {
+            "Properties": {
+                "DestinationCidrBlock": "10.160.4.0/23",
+                "RouteTableId": {
+                    "Ref": "ocptlspbpriv"
+                },
+                "VpcPeeringConnectionId": "pcx-dde979ba3"
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "ocptlspbprivTo178259456ViaPcx6D887B05": {
+            "Properties": {
+                "DestinationCidrBlock": "10.160.6.0/23",
+                "RouteTableId": {
+                    "Ref": "ocptlspbpriv"
+                },
+                "VpcPeeringConnectionId": "pcx-6d887b05"
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "ocptlspbprivback01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "CidrBlock": "10.71.0.0/27",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-b-priv-back-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "ocptlspbprivback01Assoocptlspbpriv": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ocptlspbpriv"
+                },
+                "SubnetId": {
+                    "Ref": "ocptlspbprivback01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "ocptlspbprivback02": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "CidrBlock": "10.71.0.160/28",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-b-priv-back-02"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "ocptlspbprivback02Assoocptlspbpriv": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ocptlspbpriv"
+                },
+                "SubnetId": {
+                    "Ref": "ocptlspbprivback02"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "ocptlspbprivdb01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "CidrBlock": "10.71.0.32/27",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-b-priv-db-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "ocptlspbprivdb01Assoocptlspbpriv": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ocptlspbpriv"
+                },
+                "SubnetId": {
+                    "Ref": "ocptlspbprivdb01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "ocptlspbprivelb01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "CidrBlock": "10.71.0.64/27",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-b-priv-elb-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "ocptlspbprivelb01Assoocptlspbpriv": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ocptlspbpriv"
+                },
+                "SubnetId": {
+                    "Ref": "ocptlspbprivelb01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "ocptlspbprivfront01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "CidrBlock": "10.71.0.96/27",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-b-priv-front-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "ocptlspbprivfront01Assoocptlspbpriv": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ocptlspbpriv"
+                },
+                "SubnetId": {
+                    "Ref": "ocptlspbprivfront01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "ocptlspbpubdmz01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "CidrBlock": "10.71.0.128/28",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-b-pub-dmz-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "ocptlspbpubdmz01Assoocptlsppub": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ocptlsppub"
+                },
+                "SubnetId": {
+                    "Ref": "ocptlspbpubdmz01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "ocptlspbpubelb01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "CidrBlock": "10.71.0.144/28",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-b-pub-elb-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "ocptlspbpubelb01Assoocptlsppub": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "ocptlsppub"
+                },
+                "SubnetId": {
+                    "Ref": "ocptlspbpubelb01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "ocptlsppub": {
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-p-pub"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::RouteTable"
+        },
+        "ocptlsppubTo0ViaInternetgateway": {
+            "Properties": {
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": {
+                    "Ref": "InternetGateway"
+                },
+                "RouteTableId": {
+                    "Ref": "ocptlsppub"
+                }
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "vgwRoutePropagation": {
+            "Properties": {
+                "RouteTableIds": [
+                    {
+                        "Ref": "ocptlsppub"
+                    },
+                    {
+                        "Ref": "ocptlspapriv"
+                    },
+                    {
+                        "Ref": "ocptlspbpriv"
+                    }
+                ],
+                "VpnGatewayId": "vgw-1b21176f"
+            },
+            "Type": "AWS::EC2::VPNGatewayRoutePropagation"
+        }
+    }
+}

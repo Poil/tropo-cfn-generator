@@ -1,0 +1,35 @@
+customer-p-web-pub:
+  health-protocol: HTTP
+  health-port: 80
+  health-path: /monitoring/big-ip.html
+  listeners:
+    - HTTP:80
+    - HTTPS:443:HTTP:80
+  ssl-certificate-id: "arn:aws:acm:eu-west-1:0000000000000:certificate/1231231-e123-1239-ac12-1223dz2231233"
+  public: y
+  security-groups:
+    - sgPElbWebPub
+  subnets:
+    - customer-p-a-pub-elb-01
+    - customer-p-b-pub-elb-01
+  accesslogging:
+    bucket: customer-p-logs
+
+customer-p-web-adm:
+  health-protocol: TCP
+  health-port: 80
+  #health-path: /monitoring/big-ip.html
+  listeners:
+    - TCP:80
+  proxy-protocol: y
+  proxy-protocol-ports:
+    - 80
+  public: y
+  security-groups:
+    - sgPElbWebPub
+  subnets:
+    - customer-p-a-pub-elb-01
+    - customer-p-b-pub-elb-01
+  accesslogging:
+    bucket: customer-p-logs
+

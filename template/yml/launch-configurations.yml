@@ -1,0 +1,29 @@
+#template-pw00-web:
+#    name: template-pw00-web
+#    ami: Ubuntu1404-20150606
+#    instanceType: t2.micro
+#    ebsSize: 35
+#    enabled: y
+#    security-groups:
+#        - sgMAH
+#        - sgPWebServer
+#    role: Webserver
+#    user-metadata : aslc-common.json.tpl
+#    cloudformation-init: instances-common.dict
+#    policies:
+#        s3-ro-template-p-codedeploy:
+#            bucket: template-p-codedeploy
+#            type: s3
+#            access: ro
+#        code-deploy-ro:
+#            type: codedeploy
+#            access: ro
+#        elb-rw:
+#            type: elb
+#            access: rw
+#    facts:
+#        subrole: web
+#        role: webserver
+#        platform: production
+#        status: production
+#

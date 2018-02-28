@@ -1,0 +1,816 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Outputs": {
+        "customer1papriv01Id": {
+            "Value": {
+                "Ref": "customer1papriv01"
+            }
+        },
+        "customer1paprivId": {
+            "Value": {
+                "Ref": "customer1papriv"
+            }
+        },
+        "customer1paprivdb01Id": {
+            "Value": {
+                "Ref": "customer1paprivdb01"
+            }
+        },
+        "customer1papubdmz01Id": {
+            "Value": {
+                "Ref": "customer1papubdmz01"
+            }
+        },
+        "customer1papubelb01Id": {
+            "Value": {
+                "Ref": "customer1papubelb01"
+            }
+        },
+        "customer1papubrds01Id": {
+            "Value": {
+                "Ref": "customer1papubrds01"
+            }
+        },
+        "customer1pbpriv01Id": {
+            "Value": {
+                "Ref": "customer1pbpriv01"
+            }
+        },
+        "customer1pbprivId": {
+            "Value": {
+                "Ref": "customer1pbpriv"
+            }
+        },
+        "customer1pbprivdb01Id": {
+            "Value": {
+                "Ref": "customer1pbprivdb01"
+            }
+        },
+        "customer1pbpubdmz01Id": {
+            "Value": {
+                "Ref": "customer1pbpubdmz01"
+            }
+        },
+        "customer1pbpubelb01Id": {
+            "Value": {
+                "Ref": "customer1pbpubelb01"
+            }
+        },
+        "customer1pbpubrds01Id": {
+            "Value": {
+                "Ref": "customer1pbpubrds01"
+            }
+        },
+        "customer1pcpriv01Id": {
+            "Value": {
+                "Ref": "customer1pcpriv01"
+            }
+        },
+        "customer1pcprivId": {
+            "Value": {
+                "Ref": "customer1pcpriv"
+            }
+        },
+        "customer1pcpubdmz01Id": {
+            "Value": {
+                "Ref": "customer1pcpubdmz01"
+            }
+        },
+        "customer1pcpubrds01Id": {
+            "Value": {
+                "Ref": "customer1pcpubrds01"
+            }
+        },
+        "customer1ppubdmzId": {
+            "Value": {
+                "Ref": "customer1ppubdmz"
+            }
+        },
+        "customer1ppubelbId": {
+            "Value": {
+                "Ref": "customer1ppubelb"
+            }
+        }
+    },
+    "Parameters": {
+        "InternetGateway": {
+            "Type": "String"
+        },
+        "TheVPC": {
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "customer1papriv": {
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-a-priv"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::RouteTable"
+        },
+        "customer1papriv01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "CidrBlock": "10.160.14.32/27",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-a-priv-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "customer1papriv01Assocustomer1papriv": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "customer1papriv"
+                },
+                "SubnetId": {
+                    "Ref": "customer1papriv01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "customer1paprivTo172425216ViaPcx98976Bf2": {
+            "Properties": {
+                "DestinationCidrBlock": "10.71.0.0/22",
+                "RouteTableId": {
+                    "Ref": "customer1papriv"
+                },
+                "VpcPeeringConnectionId": "pcx-98976bf2"
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "customer1paprivdb01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "CidrBlock": "10.160.15.0/28",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-a-priv-db-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "customer1paprivdb01Assocustomer1papriv": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "customer1papriv"
+                },
+                "SubnetId": {
+                    "Ref": "customer1paprivdb01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "customer1papubdmz01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "CidrBlock": "10.160.14.0/27",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-a-pub-dmz-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "customer1papubdmz01Assocustomer1ppubdmz": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "customer1ppubdmz"
+                },
+                "SubnetId": {
+                    "Ref": "customer1papubdmz01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "customer1papubelb01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "CidrBlock": "10.160.14.64/26",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-a-pub-elb-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "customer1papubelb01Assocustomer1ppubelb": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "customer1ppubelb"
+                },
+                "SubnetId": {
+                    "Ref": "customer1papubelb01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "customer1papubrds01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "CidrBlock": "10.160.15.96/28",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-a-pub-rds-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "customer1papubrds01Assocustomer1ppubdmz": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "customer1ppubdmz"
+                },
+                "SubnetId": {
+                    "Ref": "customer1papubrds01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "customer1pbpriv": {
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-b-priv"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::RouteTable"
+        },
+        "customer1pbpriv01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "CidrBlock": "10.160.14.160/27",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-b-priv-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "customer1pbpriv01Assocustomer1pbpriv": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "customer1pbpriv"
+                },
+                "SubnetId": {
+                    "Ref": "customer1pbpriv01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "customer1pbprivTo172425216ViaPcx98976Bf1": {
+            "Properties": {
+                "DestinationCidrBlock": "10.71.0.0/22",
+                "RouteTableId": {
+                    "Ref": "customer1pbpriv"
+                },
+                "VpcPeeringConnectionId": "pcx-98976bf1"
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "customer1pbprivdb01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "CidrBlock": "10.160.15.16/28",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-b-priv-db-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "customer1pbprivdb01Assocustomer1pbpriv": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "customer1pbpriv"
+                },
+                "SubnetId": {
+                    "Ref": "customer1pbprivdb01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "customer1pbpubdmz01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "CidrBlock": "10.160.14.128/27",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-b-pub-dmz-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "customer1pbpubdmz01Assocustomer1ppubdmz": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "customer1ppubdmz"
+                },
+                "SubnetId": {
+                    "Ref": "customer1pbpubdmz01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "customer1pbpubelb01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "CidrBlock": "10.160.14.192/26",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-b-pub-elb-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "customer1pbpubelb01Assocustomer1ppubelb": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "customer1ppubelb"
+                },
+                "SubnetId": {
+                    "Ref": "customer1pbpubelb01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "customer1pbpubrds01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "CidrBlock": "10.160.15.112/28",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-b-pub-rds-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "customer1pbpubrds01Assocustomer1ppubdmz": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "customer1ppubdmz"
+                },
+                "SubnetId": {
+                    "Ref": "customer1pbpubrds01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "customer1pcpriv": {
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-c-priv"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::RouteTable"
+        },
+        "customer1pcpriv01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1c",
+                "CidrBlock": "10.160.15.32/27",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-c-priv-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "customer1pcpriv01Assocustomer1pcpriv": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "customer1pcpriv"
+                },
+                "SubnetId": {
+                    "Ref": "customer1pcpriv01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "customer1pcprivTo172425216ViaPcx98976Bf1": {
+            "Properties": {
+                "DestinationCidrBlock": "10.71.0.0/22",
+                "RouteTableId": {
+                    "Ref": "customer1pcpriv"
+                },
+                "VpcPeeringConnectionId": "pcx-98976bf1"
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "customer1pcpubdmz01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1c",
+                "CidrBlock": "10.160.15.64/27",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-c-pub-dmz-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "customer1pcpubdmz01Assocustomer1ppubdmz": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "customer1ppubdmz"
+                },
+                "SubnetId": {
+                    "Ref": "customer1pcpubdmz01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "customer1pcpubrds01": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1c",
+                "CidrBlock": "10.160.15.128/28",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-c-pub-rds-01"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::Subnet"
+        },
+        "customer1pcpubrds01Assocustomer1ppubdmz": {
+            "Properties": {
+                "RouteTableId": {
+                    "Ref": "customer1ppubdmz"
+                },
+                "SubnetId": {
+                    "Ref": "customer1pcpubrds01"
+                }
+            },
+            "Type": "AWS::EC2::SubnetRouteTableAssociation"
+        },
+        "customer1ppubdmz": {
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-pub-dmz"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::RouteTable"
+        },
+        "customer1ppubdmzTo0ViaInternetgateway": {
+            "Properties": {
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": {
+                    "Ref": "InternetGateway"
+                },
+                "RouteTableId": {
+                    "Ref": "customer1ppubdmz"
+                }
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "customer1ppubdmzTo172425216ViaPcx98976Bf2": {
+            "Properties": {
+                "DestinationCidrBlock": "10.71.0.0/22",
+                "RouteTableId": {
+                    "Ref": "customer1ppubdmz"
+                },
+                "VpcPeeringConnectionId": "pcx-98976bf2"
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "customer1ppubelb": {
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "customer1-p-pub-elb"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::RouteTable"
+        },
+        "customer1ppubelbTo0ViaInternetgateway": {
+            "Properties": {
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "GatewayId": {
+                    "Ref": "InternetGateway"
+                },
+                "RouteTableId": {
+                    "Ref": "customer1ppubelb"
+                }
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "customer1ppubelbTo172425216ViaPcx98976Bf2": {
+            "Properties": {
+                "DestinationCidrBlock": "10.71.0.0/22",
+                "RouteTableId": {
+                    "Ref": "customer1ppubelb"
+                },
+                "VpcPeeringConnectionId": "pcx-98976bf2"
+            },
+            "Type": "AWS::EC2::Route"
+        }
+    }
+}

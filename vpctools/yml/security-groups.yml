@@ -1,0 +1,125 @@
+sgLaxist:
+  desc: Open Bar
+  in:
+    - tcp:any:10.0.0.0/8
+    - udp:any:10.0.0.0/8
+    - icmp:10.0.0.0/8
+  out:
+    - tcp:any:0.0.0.0/0
+    - udp:any:0.0.0.0/0
+    - icmp:0.0.0.0/0
+
+sgBastion:
+  desc: Bastion
+  in:
+    - tcp:ssh:10.0.8.0/24,10.0.12.32/27,10.7.79.4,10.0.30.0/23 # Staff
+    - tcp:ssh:10.129.60.161/32 # Ansible
+    - tcp:1080:10.0.8.0/24,10.0.12.0/24,10.7.79.0/24,10.7.101.4,10.129.62.140
+    - icmp:10.0.0.0/8
+    - udp:161:10.0.0.0/8
+    - tcp:10050:10.0.0.0/8
+  out:
+    - tcp:http,https,ntp:0.0.0.0/0
+    - tcp:ssh:10.71.0.0/22
+    - tcp:any:0.0.0.0/0
+    - udp:any:0.0.0.0/0
+    - icmp:0.0.0.0/0
+
+sgDnsServer:
+  desc: Dns Server
+  in:
+    - tcp:53:10.0.0.0/8
+    - udp:53:10.0.0.0/8
+    - tcp:ssh:sgBastion
+    - icmp:10.0.0.0/8
+    - udp:161:10.0.0.0/8
+    - tcp:10050:10.0.0.0/8
+  out:
+    - tcp:any:0.0.0.0/0
+    - udp:any:0.0.0.0/0
+    - icmp:0.0.0.0/0
+
+sgPuppetServer:
+  desc: Puppet Server
+  in:
+    - tcp:8140:10.0.0.0/8
+    - tcp:80:10.0.0.0/8
+    - tcp:ssh:10.129.60.71 # GIT/RSYNC
+    - tcp:ssh:10.129.60.64/26,10.129.60.128/26 # GIT/RSYNC From [DMZ OPS] Back Office & [DMZ OPS] Outils Automatisation
+    - icmp:10.0.0.0/8
+    - tcp:any:sgPuppetServer # NFS
+    - udp:any:sgPuppetServer # NFS
+    - udp:161:10.0.0.0/8
+    - tcp:10050:10.0.0.0/8
+  out:
+    - tcp:any:0.0.0.0/0
+    - udp:any:0.0.0.0/0
+    - icmp:0.0.0.0/0
+
+sgNatInstance:
+  desc: NAT Instance
+  in:
+    - tcp:http,https,ntp:0.0.0.0/0
+    - tcp:ssh:sgBastion
+    - icmp:10.0.0.0/8
+    - udp:161:10.0.0.0/8
+    - tcp:10050:10.0.0.0/8
+  out:
+    - tcp:any:0.0.0.0/0
+    - udp:any:0.0.0.0/0
+    - icmp:0.0.0.0/0
+
+sgAdmin:
+  desc: Services Proxy
+  in:
+    - tcp:ssh:sgBastion
+    - icmp:10.0.0.0/8
+    - udp:161:10.0.0.0/8
+    - tcp:10050:10.0.0.0/8
+  out:
+    - tcp:any:0.0.0.0/0
+    - udp:any:0.0.0.0/0
+    - icmp:0.0.0.0/0
+
+sgSvcProxy:
+  desc: Services Proxy
+  in:
+    - tcp:10050,10051:10.0.0.0/8 # Zabbix
+    - tcp:ssh:sgBastion
+    - tcp:8181:10.0.0.0/8 # AppDynamics
+    - icmp:10.0.0.0/8
+    - udp:161:10.0.0.0/8
+    - udp:25826:10.0.0.0/8       # Collectd
+  out:
+    - tcp:any:0.0.0.0/0
+    - udp:any:0.0.0.0/0
+    - icmp:0.0.0.0/0
+
+sgZbxProxy:
+  desc: Zabbix Proxies
+  in:
+    - tcp:10050,10051:10.0.0.0/8 # Zabbix
+    - tcp:ssh:sgBastion
+    - icmp:10.0.0.0/8
+    - udp:161:10.0.0.0/8
+  out:
+    - tcp:any:0.0.0.0/0
+    - udp:any:0.0.0.0/0
+    - icmp:0.0.0.0/0
+
+sgMAH:
+  desc: security group pour les serveurs managed
+  in:
+    - tcp:ssh:sgBastion
+    - icmp:10.0.0.0/8
+    - udp:161:10.0.0.0/8     # SNMP
+    - tcp:10050:10.0.0.0/8   # Zabbix agentd
+  out:
+    - udp:ntp:0.0.0.0/0 # NTP
+    - tcp:dns:10.7.0.9,10.7.0.13,10.2.3.10,10.2.3.7 # DNS
+    - udp:dns:10.7.0.9,10.7.0.13,10.2.3.10,10.2.3.7 # DNS
+    - tcp:puppet:10.7.79.15,10.129.60.141,10.129.60.142,10.129.60.143 # Puppet
+    - tcp:61614:10.7.79.15,10.129.60.141,10.129.60.142,10.129.60.143 # MCO
+    - udp:25826:10.7.79.71,10.7.79.72 # Collectd
+    - tcp:http,https:0.0.0.0/0
+

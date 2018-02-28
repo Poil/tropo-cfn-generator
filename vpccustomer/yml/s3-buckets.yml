@@ -1,0 +1,41 @@
+customer1-p-logs:
+  access_control: 'Private'
+  policies:
+    s3-putobject:
+      - customer1-p-web-pub
+      - customer1-p-web-adm
+
+customer1-p-static:
+  access_control: 'PublicRead'
+  policies:
+    s3-ro:
+      access: all
+    custom:
+      src: 's3_restrict_customer1-p-static_to_origin_production.json'
+
+customer1-p-app1:
+  access_control: 'Private'
+
+customer1-p-codedeploy:
+  access_control: 'Private'
+
+customer1-p-static:
+  access_control: 'Private'
+  policies:
+    s3-ro:
+      access: all
+
+customer1-e-static:
+  access_control: 'PublicRead'
+  policies:
+    s3-ro:
+      access: all
+    custom:
+      src: 's3_restrict_customer1-e-static-to_origin_production.json'
+
+customer1-p-static-admin:
+  access_control: 'PublicRead'
+  policies:
+    s3-ro:
+      access: all
+

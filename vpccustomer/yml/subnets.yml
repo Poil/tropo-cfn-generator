@@ -1,0 +1,56 @@
+# From 10.160.14.0 to 10.160.15.255
+customer1-p-a-pub-dmz-01: # 
+  cidr: 10.160.14.0/27
+  az: a
+  rt: customer1-p-pub-dmz
+customer1-p-a-priv-01:
+  cidr: 10.160.14.32/27
+  az: a
+  rt: customer1-p-a-priv
+customer1-p-a-pub-elb-01:
+  cidr: 10.160.14.64/26
+  az: a
+  rt: customer1-p-pub-elb
+# AZ B
+customer1-p-b-pub-dmz-01:
+  cidr: 10.160.14.128/27
+  az: b
+  rt: customer1-p-pub-dmz
+customer1-p-b-priv-01:
+  cidr: 10.160.14.160/27
+  az: b
+  rt: customer1-p-b-priv
+customer1-p-b-pub-elb-01:
+  cidr: 10.160.14.192/26
+  az: b
+  rt: customer1-p-pub-elb
+customer1-p-a-priv-db-01:
+  cidr: 10.160.15.0/28
+  az: a
+  rt: customer1-p-a-priv
+customer1-p-b-priv-db-01:
+  cidr: 10.160.15.16/28
+  az: b
+  rt: customer1-p-b-priv
+customer1-p-c-priv-01:
+  cidr: 10.160.15.32/27
+  az: c
+  rt: customer1-p-c-priv
+customer1-p-c-pub-dmz-01:
+  cidr: 10.160.15.64/27
+  az: c
+  rt: customer1-p-pub-dmz
+# RDS PUB
+customer1-p-a-pub-rds-01:
+  cidr: 10.160.15.96/28
+  az: a
+  rt: customer1-p-pub-dmz
+customer1-p-b-pub-rds-01:
+  cidr: 10.160.15.112/28
+  az: b
+  rt: customer1-p-pub-dmz
+customer1-p-c-pub-rds-01:
+  cidr: 10.160.15.128/28
+  az: c
+  rt: customer1-p-pub-dmz
+

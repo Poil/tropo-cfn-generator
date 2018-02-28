@@ -1,0 +1,1656 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Outputs": {
+        "sgBastionId": {
+            "Value": {
+                "Ref": "sgBastion"
+            }
+        },
+        "sgDnsServerId": {
+            "Value": {
+                "Ref": "sgDnsServer"
+            }
+        },
+        "sgEWebServerId": {
+            "Value": {
+                "Ref": "sgEWebServer"
+            }
+        },
+        "sgFTPId": {
+            "Value": {
+                "Ref": "sgFTP"
+            }
+        },
+        "sgLaxistId": {
+            "Value": {
+                "Ref": "sgLaxist"
+            }
+        },
+        "sgMAHId": {
+            "Value": {
+                "Ref": "sgMAH"
+            }
+        },
+        "sgMemcachedId": {
+            "Value": {
+                "Ref": "sgMemcached"
+            }
+        },
+        "sgMongoDBId": {
+            "Value": {
+                "Ref": "sgMongoDB"
+            }
+        },
+        "sgNatInstanceId": {
+            "Value": {
+                "Ref": "sgNatInstance"
+            }
+        },
+        "sgPBatchId": {
+            "Value": {
+                "Ref": "sgPBatch"
+            }
+        },
+        "sgPElbWebPubId": {
+            "Value": {
+                "Ref": "sgPElbWebPub"
+            }
+        },
+        "sgPStatsId": {
+            "Value": {
+                "Ref": "sgPStats"
+            }
+        },
+        "sgPToolsId": {
+            "Value": {
+                "Ref": "sgPTools"
+            }
+        },
+        "sgPWebADMId": {
+            "Value": {
+                "Ref": "sgPWebADM"
+            }
+        },
+        "sgPWebServerId": {
+            "Value": {
+                "Ref": "sgPWebServer"
+            }
+        },
+        "sgRdsDBId": {
+            "Value": {
+                "Ref": "sgRdsDB"
+            }
+        }
+    },
+    "Parameters": {
+        "TheVPC": {
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "sgBastion": {
+            "Properties": {
+                "GroupDescription": "Bastion",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "10.160.14.0/23",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "131.103.20.168/32",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "131.103.20.167/32",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.71.0.0/22",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "84.14.42.112/29",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "62.23.113.242/32",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "95.131.143.162/32",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "95.131.143.161/32",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "62.97.101.250/32",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "10.71.0.0/22",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgBastion"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgBastionRuleOutTcpFrom27017To27019DestsgMongoDB": {
+            "Properties": {
+                "DestinationSecurityGroupId": {
+                    "Ref": "sgMongoDB"
+                },
+                "FromPort": 27017,
+                "GroupId": {
+                    "Ref": "sgBastion"
+                },
+                "IpProtocol": "tcp",
+                "ToPort": 27019
+            },
+            "Type": "AWS::EC2::SecurityGroupEgress"
+        },
+        "sgBastionRuleOutTcpFrom3306To3306DestsgRdsDB": {
+            "Properties": {
+                "DestinationSecurityGroupId": {
+                    "Ref": "sgRdsDB"
+                },
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgBastion"
+                },
+                "IpProtocol": "tcp",
+                "ToPort": 3306
+            },
+            "Type": "AWS::EC2::SecurityGroupEgress"
+        },
+        "sgBastionRuleOutTcpFrom3306To3309DestsgNatInstance": {
+            "Properties": {
+                "DestinationSecurityGroupId": {
+                    "Ref": "sgNatInstance"
+                },
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgBastion"
+                },
+                "IpProtocol": "tcp",
+                "ToPort": 3309
+            },
+            "Type": "AWS::EC2::SecurityGroupEgress"
+        },
+        "sgDnsServer": {
+            "Properties": {
+                "GroupDescription": "Dns Server",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 53,
+                        "IpProtocol": "tcp",
+                        "ToPort": 53
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 53,
+                        "IpProtocol": "udp",
+                        "ToPort": 53
+                    },
+                    {
+                        "CidrIp": "10.71.0.0/22",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgDnsServer"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgEWebServer": {
+            "Properties": {
+                "GroupDescription": "Web Server Preproduction",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "10.160.14.0/23",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "131.103.20.168/32",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "131.103.20.167/32",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 80,
+                        "IpProtocol": "tcp",
+                        "ToPort": 80
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgEWebServer"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgEWebServerRuleInTcpFrom22To22DestsgBastion": {
+            "Properties": {
+                "FromPort": 22,
+                "GroupId": {
+                    "Ref": "sgEWebServer"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgBastion"
+                },
+                "ToPort": 22
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgEWebServerRuleOutTcpFrom11211To11211DestsgMemcached": {
+            "Properties": {
+                "DestinationSecurityGroupId": {
+                    "Ref": "sgMemcached"
+                },
+                "FromPort": 11211,
+                "GroupId": {
+                    "Ref": "sgEWebServer"
+                },
+                "IpProtocol": "tcp",
+                "ToPort": 11211
+            },
+            "Type": "AWS::EC2::SecurityGroupEgress"
+        },
+        "sgEWebServerRuleOutTcpFrom27017To27019DestsgMongoDB": {
+            "Properties": {
+                "DestinationSecurityGroupId": {
+                    "Ref": "sgMongoDB"
+                },
+                "FromPort": 27017,
+                "GroupId": {
+                    "Ref": "sgEWebServer"
+                },
+                "IpProtocol": "tcp",
+                "ToPort": 27019
+            },
+            "Type": "AWS::EC2::SecurityGroupEgress"
+        },
+        "sgEWebServerRuleOutTcpFrom3306To3306DestsgRdsDB": {
+            "Properties": {
+                "DestinationSecurityGroupId": {
+                    "Ref": "sgRdsDB"
+                },
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgEWebServer"
+                },
+                "IpProtocol": "tcp",
+                "ToPort": 3306
+            },
+            "Type": "AWS::EC2::SecurityGroupEgress"
+        },
+        "sgFTP": {
+            "Properties": {
+                "GroupDescription": "FTPd",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 20,
+                        "IpProtocol": "tcp",
+                        "ToPort": 20
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 21,
+                        "IpProtocol": "tcp",
+                        "ToPort": 21
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 50000,
+                        "IpProtocol": "tcp",
+                        "ToPort": 50100
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgFTP"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgLaxist": {
+            "Properties": {
+                "GroupDescription": "Open Bar",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgLaxist"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgMAH": {
+            "Properties": {
+                "GroupDescription": "security group pour les serveurs managed",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 123,
+                        "IpProtocol": "udp",
+                        "ToPort": 123
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 53,
+                        "IpProtocol": "tcp",
+                        "ToPort": 53
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 53,
+                        "IpProtocol": "udp",
+                        "ToPort": 53
+                    },
+                    {
+                        "CidrIp": "10.71.0.0/22",
+                        "FromPort": 8140,
+                        "IpProtocol": "tcp",
+                        "ToPort": 8140
+                    },
+                    {
+                        "CidrIp": "10.71.0.0/22",
+                        "FromPort": 61614,
+                        "IpProtocol": "tcp",
+                        "ToPort": 61614
+                    },
+                    {
+                        "CidrIp": "10.71.0.0/22",
+                        "FromPort": 25826,
+                        "IpProtocol": "udp",
+                        "ToPort": 25826
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 80,
+                        "IpProtocol": "tcp",
+                        "ToPort": 80
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 443,
+                        "IpProtocol": "tcp",
+                        "ToPort": 443
+                    },
+                    {
+                        "CidrIp": "10.71.0.0/22",
+                        "FromPort": 10051,
+                        "IpProtocol": "tcp",
+                        "ToPort": 10051
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.71.0.0/22",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "10.71.0.0/22",
+                        "FromPort": 161,
+                        "IpProtocol": "udp",
+                        "ToPort": 161
+                    },
+                    {
+                        "CidrIp": "10.71.0.0/22",
+                        "FromPort": 10050,
+                        "IpProtocol": "tcp",
+                        "ToPort": 10050
+                    },
+                    {
+                        "CidrIp": "10.71.0.0/22",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgMAH"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgMAHRuleInIcmpFrom1To1DestsgBastion": {
+            "Properties": {
+                "FromPort": -1,
+                "GroupId": {
+                    "Ref": "sgMAH"
+                },
+                "IpProtocol": "icmp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgBastion"
+                },
+                "ToPort": -1
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgMAHRuleInTcpFrom10050To10050DestsgBastion": {
+            "Properties": {
+                "FromPort": 10050,
+                "GroupId": {
+                    "Ref": "sgMAH"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgBastion"
+                },
+                "ToPort": 10050
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgMAHRuleInTcpFrom22To22DestsgBastion": {
+            "Properties": {
+                "FromPort": 22,
+                "GroupId": {
+                    "Ref": "sgMAH"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgBastion"
+                },
+                "ToPort": 22
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgMAHRuleInUdpFrom161To161DestsgBastion": {
+            "Properties": {
+                "FromPort": 161,
+                "GroupId": {
+                    "Ref": "sgMAH"
+                },
+                "IpProtocol": "udp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgBastion"
+                },
+                "ToPort": 161
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgMemcached": {
+            "Properties": {
+                "GroupDescription": "security group pour les memcached",
+                "SecurityGroupEgress": [],
+                "SecurityGroupIngress": [],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgMemcached"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgMemcachedRuleInTcpFrom11211To11211DestsgEWebServer": {
+            "Properties": {
+                "FromPort": 11211,
+                "GroupId": {
+                    "Ref": "sgMemcached"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgEWebServer"
+                },
+                "ToPort": 11211
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgMemcachedRuleInTcpFrom11211To11211DestsgPBatch": {
+            "Properties": {
+                "FromPort": 11211,
+                "GroupId": {
+                    "Ref": "sgMemcached"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgPBatch"
+                },
+                "ToPort": 11211
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgMemcachedRuleInTcpFrom11211To11211DestsgPWebServer": {
+            "Properties": {
+                "FromPort": 11211,
+                "GroupId": {
+                    "Ref": "sgMemcached"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgPWebServer"
+                },
+                "ToPort": 11211
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgMongoDB": {
+            "Properties": {
+                "GroupDescription": "MongoDB PROD",
+                "SecurityGroupEgress": [],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.71.0.0/22",
+                        "FromPort": 27017,
+                        "IpProtocol": "tcp",
+                        "ToPort": 27019
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgMongoDB"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgMongoDBRuleInTcpFrom27017To27019DestsgBastion": {
+            "Properties": {
+                "FromPort": 27017,
+                "GroupId": {
+                    "Ref": "sgMongoDB"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgBastion"
+                },
+                "ToPort": 27019
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgMongoDBRuleInTcpFrom27017To27019DestsgEWebServer": {
+            "Properties": {
+                "FromPort": 27017,
+                "GroupId": {
+                    "Ref": "sgMongoDB"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgEWebServer"
+                },
+                "ToPort": 27019
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgMongoDBRuleInTcpFrom27017To27019DestsgMongoDB": {
+            "Properties": {
+                "FromPort": 27017,
+                "GroupId": {
+                    "Ref": "sgMongoDB"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgMongoDB"
+                },
+                "ToPort": 27019
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgMongoDBRuleInTcpFrom27017To27019DestsgPBatch": {
+            "Properties": {
+                "FromPort": 27017,
+                "GroupId": {
+                    "Ref": "sgMongoDB"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgPBatch"
+                },
+                "ToPort": 27019
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgMongoDBRuleInTcpFrom27017To27019DestsgPStats": {
+            "Properties": {
+                "FromPort": 27017,
+                "GroupId": {
+                    "Ref": "sgMongoDB"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgPStats"
+                },
+                "ToPort": 27019
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgMongoDBRuleInTcpFrom27017To27019DestsgPTools": {
+            "Properties": {
+                "FromPort": 27017,
+                "GroupId": {
+                    "Ref": "sgMongoDB"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgPTools"
+                },
+                "ToPort": 27019
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgMongoDBRuleInTcpFrom27017To27019DestsgPWebServer": {
+            "Properties": {
+                "FromPort": 27017,
+                "GroupId": {
+                    "Ref": "sgMongoDB"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgPWebServer"
+                },
+                "ToPort": 27019
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgMongoDBRuleOutTcpFrom27017To27019DestsgMongoDB": {
+            "Properties": {
+                "DestinationSecurityGroupId": {
+                    "Ref": "sgMongoDB"
+                },
+                "FromPort": 27017,
+                "GroupId": {
+                    "Ref": "sgMongoDB"
+                },
+                "IpProtocol": "tcp",
+                "ToPort": 27019
+            },
+            "Type": "AWS::EC2::SecurityGroupEgress"
+        },
+        "sgNatInstance": {
+            "Properties": {
+                "GroupDescription": "NAT Instance",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 80,
+                        "IpProtocol": "tcp",
+                        "ToPort": 80
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 443,
+                        "IpProtocol": "tcp",
+                        "ToPort": 443
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 123,
+                        "IpProtocol": "tcp",
+                        "ToPort": 123
+                    },
+                    {
+                        "CidrIp": "10.71.0.0/22",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgNatInstance"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgNatInstanceRuleInTcpFrom3306To3309DestsgBastion": {
+            "Properties": {
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgNatInstance"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgBastion"
+                },
+                "ToPort": 3309
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgNatInstanceRuleInTcpFrom3306To3309DestsgRdsDB": {
+            "Properties": {
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgNatInstance"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgRdsDB"
+                },
+                "ToPort": 3309
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgPBatch": {
+            "Properties": {
+                "GroupDescription": "Batch Production",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgPBatch"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgPBatchRuleOutTcpFrom3306To3306DestsgRdsDB": {
+            "Properties": {
+                "DestinationSecurityGroupId": {
+                    "Ref": "sgRdsDB"
+                },
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgPBatch"
+                },
+                "IpProtocol": "tcp",
+                "ToPort": 3306
+            },
+            "Type": "AWS::EC2::SecurityGroupEgress"
+        },
+        "sgPElbWebPub": {
+            "Properties": {
+                "GroupDescription": "ELB Pub Production",
+                "SecurityGroupEgress": [],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 80,
+                        "IpProtocol": "tcp",
+                        "ToPort": 80
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 443,
+                        "IpProtocol": "tcp",
+                        "ToPort": 443
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgPElbWebPub"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgPElbWebPubRuleOutTcpFrom80To80DestsgPWebServer": {
+            "Properties": {
+                "DestinationSecurityGroupId": {
+                    "Ref": "sgPWebServer"
+                },
+                "FromPort": 80,
+                "GroupId": {
+                    "Ref": "sgPElbWebPub"
+                },
+                "IpProtocol": "tcp",
+                "ToPort": 80
+            },
+            "Type": "AWS::EC2::SecurityGroupEgress"
+        },
+        "sgPStats": {
+            "Properties": {
+                "GroupDescription": "Stats Production",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgPStats"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgPStatsRuleOutTcpFrom3306To3306DestsgRdsDB": {
+            "Properties": {
+                "DestinationSecurityGroupId": {
+                    "Ref": "sgRdsDB"
+                },
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgPStats"
+                },
+                "IpProtocol": "tcp",
+                "ToPort": 3306
+            },
+            "Type": "AWS::EC2::SecurityGroupEgress"
+        },
+        "sgPTools": {
+            "Properties": {
+                "GroupDescription": "Tools Production",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "10.0.0.0/8",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgPTools"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgPToolsRuleOutTcpFrom3306To3306DestsgRdsDB": {
+            "Properties": {
+                "DestinationSecurityGroupId": {
+                    "Ref": "sgRdsDB"
+                },
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgPTools"
+                },
+                "IpProtocol": "tcp",
+                "ToPort": 3306
+            },
+            "Type": "AWS::EC2::SecurityGroupEgress"
+        },
+        "sgPWebADM": {
+            "Properties": {
+                "GroupDescription": "ADM",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 22,
+                        "IpProtocol": "tcp",
+                        "ToPort": 22
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 9418,
+                        "IpProtocol": "tcp",
+                        "ToPort": 9418
+                    }
+                ],
+                "SecurityGroupIngress": [],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgPWebADM"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgPWebServer": {
+            "Properties": {
+                "GroupDescription": "Web Server Production",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "tcp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 0,
+                        "IpProtocol": "udp",
+                        "ToPort": 65535
+                    },
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": -1,
+                        "IpProtocol": "icmp",
+                        "ToPort": -1
+                    }
+                ],
+                "SecurityGroupIngress": [],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgPWebServer"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgPWebServerRuleInTcpFrom80To80DestsgPElbWebPub": {
+            "Properties": {
+                "FromPort": 80,
+                "GroupId": {
+                    "Ref": "sgPWebServer"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgPElbWebPub"
+                },
+                "ToPort": 80
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgPWebServerRuleOutTcpFrom11211To11211DestsgMemcached": {
+            "Properties": {
+                "DestinationSecurityGroupId": {
+                    "Ref": "sgMemcached"
+                },
+                "FromPort": 11211,
+                "GroupId": {
+                    "Ref": "sgPWebServer"
+                },
+                "IpProtocol": "tcp",
+                "ToPort": 11211
+            },
+            "Type": "AWS::EC2::SecurityGroupEgress"
+        },
+        "sgPWebServerRuleOutTcpFrom27017To27019DestsgMongoDB": {
+            "Properties": {
+                "DestinationSecurityGroupId": {
+                    "Ref": "sgMongoDB"
+                },
+                "FromPort": 27017,
+                "GroupId": {
+                    "Ref": "sgPWebServer"
+                },
+                "IpProtocol": "tcp",
+                "ToPort": 27019
+            },
+            "Type": "AWS::EC2::SecurityGroupEgress"
+        },
+        "sgPWebServerRuleOutTcpFrom3306To3306DestsgRdsDB": {
+            "Properties": {
+                "DestinationSecurityGroupId": {
+                    "Ref": "sgRdsDB"
+                },
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgPWebServer"
+                },
+                "IpProtocol": "tcp",
+                "ToPort": 3306
+            },
+            "Type": "AWS::EC2::SecurityGroupEgress"
+        },
+        "sgRdsDB": {
+            "Properties": {
+                "GroupDescription": "RDS PROD & PREPROD",
+                "SecurityGroupEgress": [
+                    {
+                        "CidrIp": "0.0.0.0/0",
+                        "FromPort": 3306,
+                        "IpProtocol": "tcp",
+                        "ToPort": 3320
+                    }
+                ],
+                "SecurityGroupIngress": [
+                    {
+                        "CidrIp": "95.131.143.162/32",
+                        "FromPort": 3306,
+                        "IpProtocol": "tcp",
+                        "ToPort": 3306
+                    },
+                    {
+                        "CidrIp": "95.131.143.161/32",
+                        "FromPort": 3306,
+                        "IpProtocol": "tcp",
+                        "ToPort": 3306
+                    },
+                    {
+                        "CidrIp": "95.131.143.163/32",
+                        "FromPort": 3306,
+                        "IpProtocol": "tcp",
+                        "ToPort": 3306
+                    },
+                    {
+                        "CidrIp": "62.240.254.57/32",
+                        "FromPort": 3306,
+                        "IpProtocol": "tcp",
+                        "ToPort": 3306
+                    }
+                ],
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "sgRdsDB"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "mycustomer"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "myproject"
+                    }
+                ],
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::SecurityGroup"
+        },
+        "sgRdsDBRuleInTcpFrom3306To3306DestsgBastion": {
+            "Properties": {
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgRdsDB"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgBastion"
+                },
+                "ToPort": 3306
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgRdsDBRuleInTcpFrom3306To3306DestsgEWebServer": {
+            "Properties": {
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgRdsDB"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgEWebServer"
+                },
+                "ToPort": 3306
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgRdsDBRuleInTcpFrom3306To3306DestsgFTP": {
+            "Properties": {
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgRdsDB"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgFTP"
+                },
+                "ToPort": 3306
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgRdsDBRuleInTcpFrom3306To3306DestsgPBatch": {
+            "Properties": {
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgRdsDB"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgPBatch"
+                },
+                "ToPort": 3306
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgRdsDBRuleInTcpFrom3306To3306DestsgPStats": {
+            "Properties": {
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgRdsDB"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgPStats"
+                },
+                "ToPort": 3306
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgRdsDBRuleInTcpFrom3306To3306DestsgPTools": {
+            "Properties": {
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgRdsDB"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgPTools"
+                },
+                "ToPort": 3306
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        },
+        "sgRdsDBRuleInTcpFrom3306To3306DestsgPWebServer": {
+            "Properties": {
+                "FromPort": 3306,
+                "GroupId": {
+                    "Ref": "sgRdsDB"
+                },
+                "IpProtocol": "tcp",
+                "SourceSecurityGroupId": {
+                    "Ref": "sgPWebServer"
+                },
+                "ToPort": 3306
+            },
+            "Type": "AWS::EC2::SecurityGroupIngress"
+        }
+    }
+}

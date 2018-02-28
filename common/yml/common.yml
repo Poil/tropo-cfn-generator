@@ -1,0 +1,22 @@
+# ELB have fixed accound id http://docs.aws.amazon.com/ElasticLoadBalancing/latest/DeveloperGuide/configure-s3-bucket.html
+elb_account_id:
+  us-east-1: '127311923021'
+  us-west-1: '027434742980'
+  us-west-2: '797873946194'
+  eu-west-1: '156460612806'
+  eu-central-1: '054676820928'
+  ap-northeast-1: '582318560864'
+  ap-southeast-1: '114774131450'
+  ap-southeast-2: '783225319266'
+  sa-east-1: '507241528517'
+  cn-north-1: '638102146993'
+
+# Global DNS SRV configuration (can be erase via local declaration)
+dns:
+  eu-west-1:
+    - 10.71.2.22
+    - 10.71.0.30
+  ap-southeast-1:
+    - 10.71.6.25
+  cn-north-1:
+    - AmazonProvidedDNS

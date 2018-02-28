@@ -1,0 +1,4054 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Parameters": {
+        "S3BucketURL": {
+            "Type": "String"
+        }
+    },
+    "Resources": {
+        "InternetGateway": {
+            "Properties": {
+                "Tags": [
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::InternetGateway"
+        },
+        "InternetGatewayAttachment": {
+            "Properties": {
+                "InternetGatewayId": {
+                    "Ref": "InternetGateway"
+                },
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::VPCGatewayAttachment"
+        },
+        "StackSecurityGroup": {
+            "Properties": {
+                "Parameters": {
+                    "TheVPC": {
+                        "Ref": "TheVPC"
+                    }
+                },
+                "TemplateURL": {
+                    "Fn::Join": [
+                        "/",
+                        [
+                            {
+                                "Ref": "S3BucketURL"
+                            },
+                            "vpctools_SG.json"
+                        ]
+                    ]
+                },
+                "TimeoutInMinutes": 60
+            },
+            "Type": "AWS::CloudFormation::Stack"
+        },
+        "StackSubnet": {
+            "Properties": {
+                "Parameters": {
+                    "InternetGateway": {
+                        "Ref": "InternetGateway"
+                    },
+                    "TheVPC": {
+                        "Ref": "TheVPC"
+                    }
+                },
+                "TemplateURL": {
+                    "Fn::Join": [
+                        "/",
+                        [
+                            {
+                                "Ref": "S3BucketURL"
+                            },
+                            "vpctools_SNET.json"
+                        ]
+                    ]
+                },
+                "TimeoutInMinutes": 60
+            },
+            "Type": "AWS::CloudFormation::Stack"
+        },
+        "TheVPC": {
+            "Properties": {
+                "CidrBlock": "10.71.0.0/22",
+                "EnableDnsHostnames": "true",
+                "EnableDnsSupport": "true",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "vpc ourcompany / tools"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::VPC"
+        },
+        "dhcpoptsetassoctools": {
+            "Properties": {
+                "DhcpOptionsId": {
+                    "Ref": "dhcpoptsettools"
+                },
+                "VpcId": {
+                    "Ref": "TheVPC"
+                }
+            },
+            "Type": "AWS::EC2::VPCDHCPOptionsAssociation"
+        },
+        "dhcpoptsettools": {
+            "Properties": {
+                "DomainName": "tools.eu-west-1.example.com",
+                "DomainNameServers": [
+                    "10.7.0.9",
+                    "10.2.3.10",
+                    "10.2.3.7"
+                ]
+            },
+            "Type": "AWS::EC2::DHCPOptions"
+        },
+        "ocptlspaprivTo0ViaOcptlsPi01Nat": {
+            "Properties": {
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "InstanceId": {
+                    "Ref": "ocptlspi01nat"
+                },
+                "RouteTableId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.ocptlspaprivId"
+                    ]
+                }
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "ocptlspbprivTo0ViaOcptlsPi02Nat": {
+            "Properties": {
+                "DestinationCidrBlock": "0.0.0.0/0",
+                "InstanceId": {
+                    "Ref": "ocptlspi02nat"
+                },
+                "RouteTableId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.ocptlspbprivId"
+                    ]
+                }
+            },
+            "Type": "AWS::EC2::Route"
+        },
+        "ocptlspi01adm": {
+            "DependsOn": "ocptlspi01natWaitCondition",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.ocptlspi01adm.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r ocptlspi01adm",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo subrole=adm",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=ourcompany",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=tools",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "ocptlspi01admIamInstanceProfile"
+                },
+                "ImageId": "ami-06022660",
+                "InstanceType": "t2.small",
+                "KeyName": "ocptls-keypair",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgAdminId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.ocptlspaprivback01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi01-adm"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: ocptls-pi01-adm\nfqdn: ocptls-pi01-adm.tools.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\n\nbootcmd:\n - [ cloud-init-per, once, mymkfs, mkfs.ext4, /dev/xvdc ]\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "WJ79KGNBKDQZL",
+                                "}\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"tools\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"ocptlspi01adm\" ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "ocptlspi01admWaitHandle"
+                                },
+                                "\" ]\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "ocptlspi01admDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "ocptlspi01admDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi01-adm-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "ocptlspi01admIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "ocptlspi01admIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "ocptlspi01admIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/WJ79KGNBKDQZL"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "ec2:AttachVolume",
+                                        "ec2:CreateVolume",
+                                        "ec2:DeleteVolume",
+                                        "ec2:CreateKeypair",
+                                        "ec2:DeleteKeypair",
+                                        "ec2:CreateSecurityGroup",
+                                        "ec2:DeleteSecurityGroup",
+                                        "ec2:AuthorizeSecurityGroupIngress",
+                                        "ec2:CreateImage",
+                                        "ec2:RunInstances",
+                                        "ec2:TerminateInstances",
+                                        "ec2:StopInstances",
+                                        "ec2:DescribeVolumes",
+                                        "ec2:DetachVolume",
+                                        "ec2:DescribeInstances",
+                                        "ec2:CreateSnapshot",
+                                        "ec2:DeleteSnapshot",
+                                        "ec2:DescribeSnapshots",
+                                        "ec2:DescribeImages",
+                                        "ec2:RegisterImage",
+                                        "ec2:CreateTags",
+                                        "ec2:ModifyImageAttribute"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "ec2-fullaccess"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "ocptlspi01admWaitCondition": {
+            "DependsOn": "ocptlspi01adm",
+            "Properties": {
+                "Handle": {
+                    "Ref": "ocptlspi01admWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "ocptlspi01admWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "ocptlspi01dns": {
+            "DependsOn": "ocptlspi01natWaitCondition",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.ocptlspi01dns.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r ocptlspi01dns",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo subrole=dns",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=ourcompany",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=tools",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "ocptlspi01dnsIamInstanceProfile"
+                },
+                "ImageId": "ami-06022660",
+                "InstanceType": "t2.small",
+                "KeyName": "ocptls-keypair",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgDnsServerId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.ocptlspaprivback01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi01-dns"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: ocptls-pi01-dns\nfqdn: ocptls-pi01-dns.tools.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\n\nbootcmd:\n - [ cloud-init-per, once, mymkfs, mkfs.ext4, /dev/xvdc ]\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "WJ79KGNBKDQZL",
+                                "}\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"tools\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"ocptlspi01dns\" ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "ocptlspi01dnsWaitHandle"
+                                },
+                                "\" ]\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "ocptlspi01dnsDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "ocptlspi01dnsDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi01-dns-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "ocptlspi01dnsIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "ocptlspi01dnsIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "ocptlspi01dnsIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/WJ79KGNBKDQZL"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "ocptlspi01dnsWaitCondition": {
+            "DependsOn": "ocptlspi01dns",
+            "Properties": {
+                "Handle": {
+                    "Ref": "ocptlspi01dnsWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "ocptlspi01dnsWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "ocptlspi01nat": {
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.ocptlspi01nat.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r ocptlspi01nat",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo subrole=nat",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=ourcompany",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=tools",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "ocptlspi01natIamInstanceProfile"
+                },
+                "ImageId": "ami-06022660",
+                "InstanceType": "t2.small",
+                "KeyName": "ocptls-keypair",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgLaxistId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "false",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.ocptlspapubdmz01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi01-nat"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: ocptls-pi01-nat\nfqdn: ocptls-pi01-nat.tools.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\n\nwrite_files:\n - content: |\n     net.ipv4.ip_forward = 1\n     net.ipv4.conf.eth0.send_redirects = 0\n   permissions: '0644'\n   path: /etc/sysctl.d/nat.conf\n\nbootcmd:\n - [ cloud-init-per, once, mymkfs, mkfs.ext4, /dev/xvdc ]\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - iptables -t nat -A POSTROUTING -o eth0 -s \"0.0.0.0/0\" -j MASQUERADE\n - echo 1 >/proc/sys/net/ipv4/ip_forward\n - echo 0 >/proc/sys/net/ipv4/conf/eth0/send_redirects\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - iptables-save >/etc/sysconfig/iptables\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "WJ79KGNBKDQZL",
+                                "}\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"tools\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"ocptlspi01nat\" ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "ocptlspi01natWaitHandle"
+                                },
+                                "\" ]\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "ocptlspi01natDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "ocptlspi01natDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi01-nat-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "ocptlspi01natEIP": {
+            "Properties": {
+                "Domain": "vpc",
+                "InstanceId": {
+                    "Ref": "ocptlspi01nat"
+                }
+            },
+            "Type": "AWS::EC2::EIP"
+        },
+        "ocptlspi01natIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "ocptlspi01natIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "ocptlspi01natIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/WJ79KGNBKDQZL"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "ec2:DescribeInstances",
+                                        "ec2:DescribeRouteTables",
+                                        "ec2:CreateRoute",
+                                        "ec2:ReplaceRoute",
+                                        "ec2:StartInstances",
+                                        "ec2:StopInstances"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "ec2-natha"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "ocptlspi01natWaitCondition": {
+            "DependsOn": "ocptlspi01nat",
+            "Properties": {
+                "Handle": {
+                    "Ref": "ocptlspi01natWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "ocptlspi01natWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "ocptlspi01pup": {
+            "DependsOn": "ocptlspi01natWaitCondition",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.ocptlspi01pup.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r ocptlspi01pup",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo subrole=pup",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=ourcompany",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo is_puppetmaster=True",
+                                            "\n",
+                                            "echo project_code=tools",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "ocptlspi01pupIamInstanceProfile"
+                },
+                "ImageId": "ami-06022660",
+                "InstanceType": "c4.large",
+                "KeyName": "ocptls-keypair",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgPuppetServerId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.ocptlspaprivback01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi01-pup"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: ocptls-pi01-pup\nfqdn: ocptls-pi01-pup.tools.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\n\nbootcmd:\n - [ cloud-init-per, once, mymkfs, mkfs.ext4, /dev/xvdc ]\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "WJ79KGNBKDQZL",
+                                "}\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"tools\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"ocptlspi01pup\" ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "ocptlspi01pupWaitHandle"
+                                },
+                                "\" ]\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "ocptlspi01pupDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "ocptlspi01pupDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "Size": "50",
+                "SnapshotId": "snap-3e9b4b17",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi01-pup-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "ocptlspi01pupIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "ocptlspi01pupIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "ocptlspi01pupIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/WJ79KGNBKDQZL"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "ocptlspi01pupWaitCondition": {
+            "DependsOn": "ocptlspi01pup",
+            "Properties": {
+                "Handle": {
+                    "Ref": "ocptlspi01pupWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "ocptlspi01pupWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "ocptlspi01ssh": {
+            "DependsOn": "ocptlspi01natWaitCondition",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.ocptlspi01ssh.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r ocptlspi01ssh",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo subrole=ssh",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=ourcompany",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=tools",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "ocptlspi01sshIamInstanceProfile"
+                },
+                "ImageId": "ami-06022660",
+                "InstanceType": "t2.small",
+                "KeyName": "ocptls-keypair",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgBastionId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.ocptlspaprivback01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi01-ssh"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: ocptls-pi01-ssh\nfqdn: ocptls-pi01-ssh.tools.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\n\nbootcmd:\n - [ cloud-init-per, once, mymkfs, mkfs.ext4, /dev/xvdc ]\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "WJ79KGNBKDQZL",
+                                "}\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"tools\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"ocptlspi01ssh\" ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "ocptlspi01sshWaitHandle"
+                                },
+                                "\" ]\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "ocptlspi01sshDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "ocptlspi01sshDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi01-ssh-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "ocptlspi01sshIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "ocptlspi01sshIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "ocptlspi01sshIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/WJ79KGNBKDQZL"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudwatch:Get*",
+                                        "cloudwatch:Put*",
+                                        "ec2:Describe*"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "cloudwatch-rw"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "ocptlspi01sshWaitCondition": {
+            "DependsOn": "ocptlspi01ssh",
+            "Properties": {
+                "Handle": {
+                    "Ref": "ocptlspi01sshWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "ocptlspi01sshWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "ocptlspi01svc": {
+            "DependsOn": "ocptlspi01natWaitCondition",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.ocptlspi01svc.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r ocptlspi01svc",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo subrole=svc",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=ourcompany",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=tools",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "ocptlspi01svcIamInstanceProfile"
+                },
+                "ImageId": "ami-06022660",
+                "InstanceType": "t2.small",
+                "KeyName": "ocptls-keypair",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgSvcProxyId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.ocptlspaprivback01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi01-svc"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: ocptls-pi01-svc\nfqdn: ocptls-pi01-svc.tools.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\n\nbootcmd:\n - [ cloud-init-per, once, mymkfs, mkfs.ext4, /dev/xvdc ]\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "WJ79KGNBKDQZL",
+                                "}\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"tools\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"ocptlspi01svc\" ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "ocptlspi01svcWaitHandle"
+                                },
+                                "\" ]\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "ocptlspi01svcDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "ocptlspi01svcDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi01-svc-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "ocptlspi01svcIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "ocptlspi01svcIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "ocptlspi01svcIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/WJ79KGNBKDQZL"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "ocptlspi01svcWaitCondition": {
+            "DependsOn": "ocptlspi01svc",
+            "Properties": {
+                "Handle": {
+                    "Ref": "ocptlspi01svcWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "ocptlspi01svcWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "ocptlspi01zbx": {
+            "DependsOn": "ocptlspi01natWaitCondition",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.ocptlspi01zbx.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r ocptlspi01zbx",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo subrole=zbx",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=ourcompany",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=tools",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "ocptlspi01zbxIamInstanceProfile"
+                },
+                "ImageId": "ami-06022660",
+                "InstanceType": "t2.small",
+                "KeyName": "ocptls-keypair",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgZbxProxyId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.ocptlspaprivback01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi01-zbx"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: ocptls-pi01-zbx\nfqdn: ocptls-pi01-zbx.tools.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\n\nbootcmd:\n - [ cloud-init-per, once, mymkfs, mkfs.ext4, /dev/xvdc ]\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "WJ79KGNBKDQZL",
+                                "}\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"tools\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"ocptlspi01zbx\" ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "ocptlspi01zbxWaitHandle"
+                                },
+                                "\" ]\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "ocptlspi01zbxDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "ocptlspi01zbxDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1a",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi01-zbx-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "ocptlspi01zbxIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "ocptlspi01zbxIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "ocptlspi01zbxIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/WJ79KGNBKDQZL"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "ocptlspi01zbxWaitCondition": {
+            "DependsOn": "ocptlspi01zbx",
+            "Properties": {
+                "Handle": {
+                    "Ref": "ocptlspi01zbxWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "ocptlspi01zbxWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "ocptlspi02dns": {
+            "DependsOn": "ocptlspi02natWaitCondition",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.ocptlspi02dns.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r ocptlspi02dns",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo subrole=dns",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=ourcompany",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=tools",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "ocptlspi02dnsIamInstanceProfile"
+                },
+                "ImageId": "ami-06022660",
+                "InstanceType": "t2.small",
+                "KeyName": "ocptls-keypair",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgDnsServerId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.ocptlspbprivback01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi02-dns"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: ocptls-pi02-dns\nfqdn: ocptls-pi02-dns.tools.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\n\nbootcmd:\n - [ cloud-init-per, once, mymkfs, mkfs.ext4, /dev/xvdc ]\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "WJ79KGNBKDQZL",
+                                "}\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"tools\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"ocptlspi02dns\" ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "ocptlspi02dnsWaitHandle"
+                                },
+                                "\" ]\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "ocptlspi02dnsDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "ocptlspi02dnsDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi02-dns-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "ocptlspi02dnsIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "ocptlspi02dnsIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "ocptlspi02dnsIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/WJ79KGNBKDQZL"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "ocptlspi02dnsWaitCondition": {
+            "DependsOn": "ocptlspi02dns",
+            "Properties": {
+                "Handle": {
+                    "Ref": "ocptlspi02dnsWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "ocptlspi02dnsWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "ocptlspi02nat": {
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.ocptlspi02nat.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r ocptlspi02nat",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo subrole=nat",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=ourcompany",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=tools",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "ocptlspi02natIamInstanceProfile"
+                },
+                "ImageId": "ami-06022660",
+                "InstanceType": "t2.small",
+                "KeyName": "ocptls-keypair",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgLaxistId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "false",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.ocptlspbpubdmz01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi02-nat"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: ocptls-pi02-nat\nfqdn: ocptls-pi02-nat.tools.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\n\nwrite_files:\n - content: |\n     net.ipv4.ip_forward = 1\n     net.ipv4.conf.eth0.send_redirects = 0\n   permissions: '0644'\n   path: /etc/sysctl.d/nat.conf\n\nbootcmd:\n - [ cloud-init-per, once, mymkfs, mkfs.ext4, /dev/xvdc ]\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - iptables -t nat -A POSTROUTING -o eth0 -s \"0.0.0.0/0\" -j MASQUERADE\n - echo 1 >/proc/sys/net/ipv4/ip_forward\n - echo 0 >/proc/sys/net/ipv4/conf/eth0/send_redirects\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - iptables-save >/etc/sysconfig/iptables\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "WJ79KGNBKDQZL",
+                                "}\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"tools\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"ocptlspi02nat\" ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "ocptlspi02natWaitHandle"
+                                },
+                                "\" ]\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "ocptlspi02natDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "ocptlspi02natDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi02-nat-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "ocptlspi02natEIP": {
+            "Properties": {
+                "Domain": "vpc",
+                "InstanceId": {
+                    "Ref": "ocptlspi02nat"
+                }
+            },
+            "Type": "AWS::EC2::EIP"
+        },
+        "ocptlspi02natIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "ocptlspi02natIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "ocptlspi02natIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/WJ79KGNBKDQZL"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "ec2:DescribeInstances",
+                                        "ec2:DescribeRouteTables",
+                                        "ec2:CreateRoute",
+                                        "ec2:ReplaceRoute",
+                                        "ec2:StartInstances",
+                                        "ec2:StopInstances"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "ec2-natha"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "ocptlspi02natWaitCondition": {
+            "DependsOn": "ocptlspi02nat",
+            "Properties": {
+                "Handle": {
+                    "Ref": "ocptlspi02natWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "ocptlspi02natWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "ocptlspi02pup": {
+            "DependsOn": "ocptlspi02natWaitCondition",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.ocptlspi02pup.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r ocptlspi02pup",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo subrole=pup",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=ourcompany",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo is_puppetmaster=True",
+                                            "\n",
+                                            "echo project_code=tools",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "ocptlspi02pupIamInstanceProfile"
+                },
+                "ImageId": "ami-06022660",
+                "InstanceType": "c4.large",
+                "KeyName": "ocptls-keypair",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgPuppetServerId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.ocptlspbprivback01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi02-pup"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: ocptls-pi02-pup\nfqdn: ocptls-pi02-pup.tools.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\n\nbootcmd:\n - [ cloud-init-per, once, mymkfs, mkfs.ext4, /dev/xvdc ]\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "WJ79KGNBKDQZL",
+                                "}\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"tools\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"ocptlspi02pup\" ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "ocptlspi02pupWaitHandle"
+                                },
+                                "\" ]\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "ocptlspi02pupDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "ocptlspi02pupDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "Size": "50",
+                "SnapshotId": "snap-2a0b8f0a",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi02-pup-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "ocptlspi02pupIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "ocptlspi02pupIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "ocptlspi02pupIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/WJ79KGNBKDQZL"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "ocptlspi02pupWaitCondition": {
+            "DependsOn": "ocptlspi02pup",
+            "Properties": {
+                "Handle": {
+                    "Ref": "ocptlspi02pupWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "ocptlspi02pupWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "ocptlspi02svc": {
+            "DependsOn": "ocptlspi02natWaitCondition",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.ocptlspi02svc.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r ocptlspi02svc",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo subrole=svc",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=ourcompany",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=tools",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "ocptlspi02svcIamInstanceProfile"
+                },
+                "ImageId": "ami-06022660",
+                "InstanceType": "t2.small",
+                "KeyName": "ocptls-keypair",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgSvcProxyId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.ocptlspbprivback01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi02-svc"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: ocptls-pi02-svc\nfqdn: ocptls-pi02-svc.tools.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\n\nbootcmd:\n - [ cloud-init-per, once, mymkfs, mkfs.ext4, /dev/xvdc ]\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "WJ79KGNBKDQZL",
+                                "}\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"tools\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"ocptlspi02svc\" ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "ocptlspi02svcWaitHandle"
+                                },
+                                "\" ]\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "ocptlspi02svcDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "ocptlspi02svcDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi02-svc-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "ocptlspi02svcIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "ocptlspi02svcIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "ocptlspi02svcIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/WJ79KGNBKDQZL"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "ocptlspi02svcWaitCondition": {
+            "DependsOn": "ocptlspi02svc",
+            "Properties": {
+                "Handle": {
+                    "Ref": "ocptlspi02svcWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "ocptlspi02svcWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "ocptlspi02zbx": {
+            "DependsOn": "ocptlspi02natWaitCondition",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.ocptlspi02zbx.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r ocptlspi02zbx",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo subrole=zbx",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=ourcompany",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=production",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=infrastructure",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=tools",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "ocptlspi02zbxIamInstanceProfile"
+                },
+                "ImageId": "ami-06022660",
+                "InstanceType": "t2.small",
+                "KeyName": "ocptls-keypair",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    },
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgZbxProxyId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.ocptlspbprivback01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "production"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi02-zbx"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: ocptls-pi02-zbx\nfqdn: ocptls-pi02-zbx.tools.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\n\nbootcmd:\n - [ cloud-init-per, once, mymkfs, mkfs.ext4, /dev/xvdc ]\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "WJ79KGNBKDQZL",
+                                "}\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"tools\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"ocptlspi02zbx\" ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "ocptlspi02zbxWaitHandle"
+                                },
+                                "\" ]\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "ocptlspi02zbxDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "ocptlspi02zbxDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "Size": "15",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-pi02-zbx-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "ocptlspi02zbxIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "ocptlspi02zbxIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "ocptlspi02zbxIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/WJ79KGNBKDQZL"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "ocptlspi02zbxWaitCondition": {
+            "DependsOn": "ocptlspi02zbx",
+            "Properties": {
+                "Handle": {
+                    "Ref": "ocptlspi02zbxWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "ocptlspi02zbxWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        },
+        "ocptlstw01tmp": {
+            "DependsOn": "ocptlspi02natWaitCondition",
+            "Metadata": {
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "files": {
+                            "/etc/cfn/cfn-hup.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[main]\n",
+                                            "stack=",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            "\n",
+                                            "region=",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/cfn/hooks.d/cfn-auto-reloader.conf": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "[cfn-auto-reloader-hook]\n",
+                                            "triggers=post.update\n",
+                                            "path=Resources.ocptlstw01tmp.Metadata.AWS::CloudFormation::Init\n",
+                                            "action=cfn-init -v -s ",
+                                            {
+                                                "Ref": "AWS::StackName"
+                                            },
+                                            " -r ocptlstw01tmp",
+                                            " --region ",
+                                            {
+                                                "Ref": "AWS::Region"
+                                            },
+                                            "\n\n"
+                                        ]
+                                    ]
+                                }
+                            },
+                            "/etc/facter/facts.d/aws": {
+                                "content": {
+                                    "Fn::Join": [
+                                        "",
+                                        [
+                                            "#!/bin/bash\n",
+                                            "echo subrole=tmp",
+                                            "\n",
+                                            "echo certname=generic-hostcert.aws",
+                                            "\n",
+                                            "echo client_code=ourcompany",
+                                            "\n",
+                                            "echo node_name=facter",
+                                            "\n",
+                                            "echo platform=test",
+                                            "\n",
+                                            "echo hosting_code=mah",
+                                            "\n",
+                                            "echo role=databases",
+                                            "\n",
+                                            "echo node_name_fact=fqdn",
+                                            "\n",
+                                            "echo project_code=tools",
+                                            "\n",
+                                            "echo location=aws",
+                                            "\n"
+                                        ]
+                                    ]
+                                },
+                                "group": "root",
+                                "mode": "000755",
+                                "owner": "root"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "BlockDeviceMappings": [
+                    {
+                        "DeviceName": "/dev/sda1",
+                        "Ebs": {
+                            "DeleteOnTermination": "false",
+                            "VolumeSize": "15",
+                            "VolumeType": "gp2"
+                        }
+                    },
+                    {
+                        "DeviceName": "/dev/sdb",
+                        "VirtualName": "ephemeral0"
+                    }
+                ],
+                "DisableApiTermination": "false",
+                "IamInstanceProfile": {
+                    "Ref": "ocptlstw01tmpIamInstanceProfile"
+                },
+                "ImageId": "ami-b809eac1",
+                "InstanceType": "t2.small",
+                "KeyName": "ocptls-keypair",
+                "SecurityGroupIds": [
+                    {
+                        "Fn::GetAtt": [
+                            "StackSecurityGroup",
+                            "Outputs.sgMAHId"
+                        ]
+                    }
+                ],
+                "SourceDestCheck": "true",
+                "SubnetId": {
+                    "Fn::GetAtt": [
+                        "StackSubnet",
+                        "Outputs.ocptlspbprivback01Id"
+                    ]
+                },
+                "Tags": [
+                    {
+                        "Key": "project",
+                        "Value": "tools"
+                    },
+                    {
+                        "Key": "environment",
+                        "Value": "test"
+                    },
+                    {
+                        "Key": "client",
+                        "Value": "ourcompany"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-td01-tmp"
+                    },
+                    {
+                        "Key": "schedule",
+                        "Value": "non-business-hours"
+                    }
+                ],
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [
+                            "",
+                            [
+                                "#cloud-config\n\nhostname: ocptls-td01-tmp\nfqdn: ocptls-td01-tmp.tools.",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                ".\nmanage_etc_hosts: true\n\nbootcmd:\n - [ cloud-init-per, once, mymkfs, mkfs.ext4, /dev/xvdc ]\n - iptables -F\n - iptables -X\n - iptables -t nat -F\n - iptables -t nat -X\n - iptables -t mangle -F\n - iptables -t mangle -X\n - iptables -P INPUT ACCEPT\n - iptables -P FORWARD ACCEPT\n - iptables -P OUTPUT ACCEPT\n - if ! test -b \"/dev/$(curl -s http://169.254.169.254/latest/meta-data/block-device-mapping/ephemeral0)\" || mountpoint -q /mnt; then test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048; fi\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n\nruncmd:\n - test -f /mnt/swap.img || /bin/dd if=/dev/zero of=/mnt/swap.img bs=1M count=2048\n - test -f /mnt/swap.img && chmod 600 /mnt/swap.img\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/mkswap /mnt/swap.img)\n - test -f /mnt/swap.img && (grep -q \"/mnt/swap.img\" /proc/swaps || /sbin/swapon /mnt/swap.img)\n - export PATH=\"$PATH:/usr/local/bin:/usr/local/sbin\"\n - [ /usr/local/sbin/r53.py, \"",
+                                "WJ79KGNBKDQZL",
+                                "\", \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", \"tools\" ]\n - [ cfn-init, --region, \"",
+                                {
+                                    "Ref": "AWS::Region"
+                                },
+                                "\", -s, \"",
+                                {
+                                    "Ref": "AWS::StackName"
+                                },
+                                "\", -r, \"ocptlstw01tmp\" ]\n - [ cfn-signal, -e, \"0\", -r, \"Deployment Complete.\", \"",
+                                {
+                                    "Ref": "ocptlstw01tmpWaitHandle"
+                                },
+                                "\" ]\n"
+                            ]
+                        ]
+                    }
+                },
+                "Volumes": [
+                    {
+                        "Device": "/dev/sdc",
+                        "VolumeId": {
+                            "Ref": "ocptlstw01tmpDataVolume"
+                        }
+                    }
+                ]
+            },
+            "Type": "AWS::EC2::Instance"
+        },
+        "ocptlstw01tmpDataVolume": {
+            "Properties": {
+                "AvailabilityZone": "eu-west-1b",
+                "Size": "15",
+                "SnapshotId": "snap-0f47e44ce3be7c922",
+                "Tags": [
+                    {
+                        "Key": "Name",
+                        "Value": "ocptls-td01-tmp-data"
+                    }
+                ],
+                "VolumeType": "gp2"
+            },
+            "Type": "AWS::EC2::Volume"
+        },
+        "ocptlstw01tmpIamInstanceProfile": {
+            "Properties": {
+                "Path": "/",
+                "Roles": [
+                    {
+                        "Ref": "ocptlstw01tmpIamRole"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::InstanceProfile"
+        },
+        "ocptlstw01tmpIamRole": {
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": [
+                                "sts:AssumeRole"
+                            ],
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [
+                                    "ec2.amazonaws.com"
+                                ]
+                            }
+                        }
+                    ]
+                },
+                "Path": "/",
+                "Policies": [
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "cloudformation:DescribeStackResource"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "describestacks"
+                    },
+                    {
+                        "PolicyDocument": {
+                            "Statement": [
+                                {
+                                    "Action": [
+                                        "route53:ChangeResourceRecordSets",
+                                        "route53:ListResourceRecordSets"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::hostedzone/WJ79KGNBKDQZL"
+                                },
+                                {
+                                    "Action": [
+                                        "route53:GetChange"
+                                    ],
+                                    "Effect": "Allow",
+                                    "Resource": "arn:aws:route53:::change/*"
+                                }
+                            ]
+                        },
+                        "PolicyName": "route53update"
+                    }
+                ]
+            },
+            "Type": "AWS::IAM::Role"
+        },
+        "ocptlstw01tmpWaitCondition": {
+            "DependsOn": "ocptlstw01tmp",
+            "Properties": {
+                "Handle": {
+                    "Ref": "ocptlstw01tmpWaitHandle"
+                },
+                "Timeout": "3600"
+            },
+            "Type": "AWS::CloudFormation::WaitCondition"
+        },
+        "ocptlstw01tmpWaitHandle": {
+            "Type": "AWS::CloudFormation::WaitConditionHandle"
+        }
+    }
+}
